@@ -18,23 +18,23 @@ from unfold.contrib.forms.widgets import (
 )
 from unfold.decorators import display
 from parler.admin import TranslatableAdmin
-from .models import (
-    Office, ContactInquiry
-)
+from .models import Office, ContactInquiry
 from django.forms import CheckboxInput
 from django.http import HttpResponse
 
+
 @admin.register(Office)
 class OfficeAdmin(TranslatableAdmin, ModelAdmin):
-    # Основные настройки
+    """Админка для офисов и фабрик"""
     list_display = [
         'name', 
         'office_type_display', 
         'phone', 
         'email', 
-        'is_main', 
-        'is_active',
-        'order'
+        'is_main_display',
+        'is_active_display',
+        'order',
+        'is_active'
     ]
     list_display_links = ['name']
     list_filter = [
@@ -46,7 +46,6 @@ class OfficeAdmin(TranslatableAdmin, ModelAdmin):
     search_fields = ['translations__name', 'translations__address', 'phone', 'email']
     ordering = ['order', 'translations__name']
     
-    # Группировка полей
     fieldsets = [
         (_("Основна інформація"), {
             'fields': ['name', 'office_type', 'description'],
@@ -66,11 +65,6 @@ class OfficeAdmin(TranslatableAdmin, ModelAdmin):
         }),
     ]
     
-    # Настройки для переводимых полей
-    def get_prepopulated_fields(self, request, obj=None):
-        return {}
-    
-    # Кастомные методы отображения
     @display(description=_("Тип"), ordering='office_type')
     def office_type_display(self, obj):
         colors = {
@@ -84,17 +78,31 @@ class OfficeAdmin(TranslatableAdmin, ModelAdmin):
             color, color, obj.get_office_type_display()
         )
     
+    @display(description=_("Головний"), ordering='is_main')
+    def is_main_display(self, obj):
+        if obj.is_main:
+            return format_html(
+                '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Головний</span>'
+            )
+        return format_html(
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Звичайний</span>'
+        )
+    
+    @display(description=_("Статус"), ordering='is_active')
+    def is_active_display(self, obj):
+        if obj.is_active:
+            return format_html(
+                '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Активний</span>'
+            )
+        return format_html(
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Неактивний</span>'
+        )
+    
     formfield_overrides = {
         models.TextField: {"widget": WysiwygWidget},
         models.BooleanField: {"widget": CheckboxInput},
     }
     
-    # Дополнительные настройки
-    save_on_top = True
-    save_as = True
-    list_per_page = 20
-    
-    # Действия
     actions = ['make_active', 'make_inactive', 'mark_as_main']
     
     @admin.action(description=_("Позначити як активні"))
@@ -109,52 +117,27 @@ class OfficeAdmin(TranslatableAdmin, ModelAdmin):
     
     @admin.action(description=_("Позначити як головний офіс"))
     def mark_as_main(self, request, queryset):
+        # Сначала убираем отметку "главный" со всех офисов
         Office.objects.update(is_main=False)
+        # Затем отмечаем выбранный офис как главный
         if queryset.exists():
             queryset.first().is_main = True
             queryset.first().save()
             self.message_user(request, "Головний офіс змінено.")
 
-    # Кастомный маршрут
-    def get_urls(self):
-        """Добавляет пользовательский маршрут."""
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                "office-list/",
-                self.admin_site.admin_view(self.office_changelist_view),
-                name="ugc_backend_office_changelist",
-            ),
-        ]
-        return custom_urls + urls
-
-    def office_changelist_view(self, request):
-        # просто возвращаем стандартный changelist для модели Office
-        return super().changelist_view(request)
-    
-    # Добавление ссылки на маршрут
-    def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        extra_context["custom_links"] = [
-            {
-                "name": "Список офисов",
-                "url": reverse("admin:ugc_backend_office_changelist"),
-            }
-        ]
-        return super().changelist_view(request, extra_context=extra_context)
-
 
 @admin.register(ContactInquiry)
 class ContactInquiryAdmin(ModelAdmin):
-    # Основные настройки
+    """Админка для обращений через форму обратной связи"""
     list_display = [
         'name',
         'email', 
-        'inquiry_type',
+        'inquiry_type_display',
         'subject',
+        'company',
         'created_at',
-        'is_processed',
-        'company'
+        'is_processed_display',
+        'is_processed'
     ]
     list_display_links = ['name', 'subject']
     list_filter = [
@@ -168,7 +151,7 @@ class ContactInquiryAdmin(ModelAdmin):
     ordering = ['-created_at']
     date_hierarchy = 'created_at'
     
-    readonly_fields = ['created_at']
+    readonly_fields = ['created_at', 'processed_at']
     
     fieldsets = [
         (_("Інформація про відправника"), {
@@ -189,6 +172,37 @@ class ContactInquiryAdmin(ModelAdmin):
         }),
     ]
     
+    @display(description=_("Тип запиту"), ordering='inquiry_type')
+    def inquiry_type_display(self, obj):
+        colors = {
+            'general': 'blue',
+            'cooperation': 'green',
+            'complaint': 'red',
+            'suggestion': 'yellow',
+            'quote': 'purple'
+        }
+        color = colors.get(obj.inquiry_type, 'gray')
+        return format_html(
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{}-100 text-{}-800">{}</span>',
+            color, color, obj.get_inquiry_type_display()
+        )
+    
+    @display(description=_("Статус"), ordering='is_processed')
+    def is_processed_display(self, obj):
+        if obj.is_processed:
+            return format_html(
+                '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Оброблено</span>'
+            )
+        return format_html(
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Нове</span>'
+        )
+    
+    formfield_overrides = {
+        models.TextField: {"widget": WysiwygWidget},
+    }
+    
+    actions = ['mark_processed', 'mark_unprocessed']
+    
     @admin.action(description=_("Позначити як оброблені"))
     def mark_processed(self, request, queryset):
         from django.utils import timezone
@@ -201,42 +215,10 @@ class ContactInquiryAdmin(ModelAdmin):
         self.message_user(request, f"{count} звернень позначено як необроблені.")
     
     def save_model(self, request, obj, form, change):
+        """Автоматически устанавливаем дату обработки"""
         if 'is_processed' in form.changed_data and obj.is_processed:
             from django.utils import timezone
             obj.processed_at = timezone.now()
         elif 'is_processed' in form.changed_data and not obj.is_processed:
             obj.processed_at = None
         super().save_model(request, obj, form, change)
-
-
-# Кастомный маршрут
-    def get_urls(self):
-        """Добавляет пользовательский маршрут."""
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                "contactinquiry-list/",
-                self.admin_site.admin_view(self.contactinquiry_changelist_view),
-                name="ugc_backend_contactinquiry_changelist",
-            ),
-        ]
-        return custom_urls + urls
-
-    def contactinquiry_changelist_view(self, request):
-        # просто возвращаем стандартный changelist для модели Office
-        return super().changelist_view(request)
-
-    # Добавление ссылки на маршрут
-    def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        extra_context["custom_links"] = [
-            {
-                "name": "Список звернень",
-                "url": reverse("admin:ugc_backend_contactinquiry_changelist"),
-            }
-        ]
-        return super().changelist_view(request, extra_context=extra_context)
-
-    
-
-

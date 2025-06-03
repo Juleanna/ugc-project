@@ -247,13 +247,14 @@ CKEDITOR_CONFIGS = {
     }
 }
 
+# Unfold Admin Configuration
 UNFOLD = {
-    "SITE_TITLE": "Адмін панель",
-    "SITE_HEADER": "Управління сайтом",
+    "SITE_TITLE": "UGC - Адмін панель",
+    "SITE_HEADER": "Управління сайтом UGC",
     "SITE_URL": "/",
     "SITE_ICON": lambda request: static("icon.svg"),  # опционально
     "SITE_LOGO": lambda request: static("logo.svg"),  # опционально
-    "SITE_SYMBOL": "speed",  # symbol from icon set
+    "SITE_SYMBOL": "business",  # symbol from icon set
     "SHOW_HISTORY": True,  # show/hide "History" button
     "SHOW_VIEW_ON_SITE": True,  # show/hide "View on site" button
     "ENVIRONMENT": "ugc_backend.settings.environment_callback",  # опционально
@@ -287,26 +288,134 @@ UNFOLD = {
             "flags": {
                 "en": "🇺🇸",
                 "uk": "🇺🇦",
-                "ru": "🇷🇺",
             },
         },
     },
     "SIDEBAR": {
-        "show_search": True,  # Search in applications and models names
-        "show_all_applications": True,  # Dropdown with all applications and models
+        "show_search": False,
+        "show_all_applications": False,
         "navigation": [
             {
                 "title": _("Навігація"),
-                "separator": True,  # Top border
+                "separator": True,
                 "items": [
                     {
                         "title": _("Головна"),
-                        "icon": "dashboard",  # Supported icon set: https://fonts.google.com/icons
+                        "icon": "dashboard",
                         "link": lambda request: reverse_lazy("admin:index"),
                     },
                 ],
             },
-           
+            {
+                "title": _("Контент"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Головна сторінка"),
+                        "icon": "home",
+                        "link": lambda request: reverse_lazy("admin:content_homepage_changelist"),
+                    },
+                    {
+                        "title": _("Про нас"),
+                        "icon": "info",
+                        "link": lambda request: reverse_lazy("admin:content_aboutpage_changelist"),
+                    },
+                    {
+                        "title": _("Команда"),
+                        "icon": "group",
+                        "link": lambda request: reverse_lazy("admin:content_teammember_changelist"),
+                    },
+                    {
+                        "title": _("Сертифікати"),
+                        "icon": "verified",
+                        "link": lambda request: reverse_lazy("admin:content_certificate_changelist"),
+                    },
+                    {
+                        "title": _("Фото виробництва"),
+                        "icon": "photo_library",
+                        "link": lambda request: reverse_lazy("admin:content_productionphoto_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Послуги"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Всі послуги"),
+                        "icon": "design_services",
+                        "link": lambda request: reverse_lazy("admin:services_service_changelist"),
+                    },
+                    {
+                        "title": _("Особливості послуг"),
+                        "icon": "star",
+                        "link": lambda request: reverse_lazy("admin:services_servicefeature_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Проєкти"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Категорії проєктів"),
+                        "icon": "category",
+                        "link": lambda request: reverse_lazy("admin:projects_projectcategory_changelist"),
+                    },
+                    {
+                        "title": _("Всі проєкти"),
+                        "icon": "work",
+                        "link": lambda request: reverse_lazy("admin:projects_project_changelist"),
+                    },
+                    {
+                        "title": _("Зображення проєктів"),
+                        "icon": "collections",
+                        "link": lambda request: reverse_lazy("admin:projects_projectimage_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Вакансії"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Позиції"),
+                        "icon": "work_outline",
+                        "link": lambda request: reverse_lazy("admin:jobs_jobposition_changelist"),
+                    },
+                    {
+                        "title": _("Заявки"),
+                        "icon": "assignment",
+                        "link": lambda request: reverse_lazy("admin:jobs_jobapplication_changelist"),
+                    },
+                    {
+                        "title": _("Фото робочих місць"),
+                        "icon": "business_center",
+                        "link": lambda request: reverse_lazy("admin:jobs_workplacephoto_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Партнери"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Інформація для партнерів"),
+                        "icon": "handshake",
+                        "link": lambda request: reverse_lazy("admin:partners_partnershipinfo_changelist"),
+                    },
+                    {
+                        "title": _("Етапи роботи"),
+                        "icon": "timeline",
+                        "link": lambda request: reverse_lazy("admin:partners_workstage_changelist"),
+                    },
+                    {
+                        "title": _("Запити партнерів"),
+                        "icon": "mail",
+                        "link": lambda request: reverse_lazy("admin:partners_partnerinquiry_changelist"),
+                    },
+                ],
+            },
             {
                 "title": _("Контакти"),
                 "separator": True,
@@ -314,12 +423,12 @@ UNFOLD = {
                     {
                         "title": _("Офіси та фабрики"),
                         "icon": "business",
-                        "link": lambda request: reverse_lazy("admin:ugc_backend_office_changelist"),
+                        "link": lambda request: reverse_lazy("admin:contacts_office_changelist"),
                     },
                     {
                         "title": _("Звернення"),
                         "icon": "contact_support",
-                        "link": lambda request: reverse_lazy("admin:ugc_backend_contactinquiry_changelist"),
+                        "link": lambda request: reverse_lazy("admin:contacts_contactinquiry_changelist"),
                     },
                 ],
             },
@@ -328,44 +437,144 @@ UNFOLD = {
     "TABS": [
         {
             "models": [
-                "ugc_backend.office",
+                "contacts.office",
             ],
             "items": [
                 {
                     "title": _("Всі офіси"),
-                    "link": lambda request: reverse_lazy("admin:ugc_backend_office_changelist"),
+                    "link": lambda request: reverse_lazy("admin:contacts_office_changelist"),
                 },
                 {
                     "title": _("Активні"),
-                    "link": lambda request: reverse_lazy("admin:ugc_backend_office_changelist") + "?is_active__exact=1",
+                    "link": lambda request: reverse_lazy("admin:contacts_office_changelist") + "?is_active__exact=1",
                 },
                 {
                     "title": _("Головні офіси"),
-                    "link": lambda request: reverse_lazy("admin:ugc_backend_office_changelist") + "?is_main__exact=1",
+                    "link": lambda request: reverse_lazy("admin:contacts_office_changelist") + "?is_main__exact=1",
                 },
             ],
         },
         {
             "models": [
-                "ugc_backend.contactinquiry",
+                "contacts.contactinquiry",
             ],
             "items": [
                 {
                     "title": _("Всі звернення"),
-                    "link": lambda request: reverse_lazy("admin:ugc_backend_contactinquiry_changelist"),
+                    "link": lambda request: reverse_lazy("admin:contacts_contactinquiry_changelist"),
                 },
                 {
                     "title": _("Необроблені"),
-                    "link": lambda request: reverse_lazy("admin:ugc_backend_contactinquiry_changelist") + "?is_processed__exact=0",
+                    "link": lambda request: reverse_lazy("admin:contacts_contactinquiry_changelist") + "?is_processed__exact=0",
                 },
                 {
                     "title": _("Оброблені"),
-                    "link": lambda request: reverse_lazy("admin:ugc_backend_contactinquiry_changelist") + "?is_processed__exact=1",
+                    "link": lambda request: reverse_lazy("admin:contacts_contactinquiry_changelist") + "?is_processed__exact=1",
+                },
+            ],
+        },
+        {
+            "models": [
+                "services.service",
+            ],
+            "items": [
+                {
+                    "title": _("Всі послуги"),
+                    "link": lambda request: reverse_lazy("admin:services_service_changelist"),
+                },
+                {
+                    "title": _("Активні"),
+                    "link": lambda request: reverse_lazy("admin:services_service_changelist") + "?is_active__exact=1",
+                },
+                {
+                    "title": _("Рекомендовані"),
+                    "link": lambda request: reverse_lazy("admin:services_service_changelist") + "?is_featured__exact=1",
+                },
+            ],
+        },
+        {
+            "models": [
+                "projects.project",
+            ],
+            "items": [
+                {
+                    "title": _("Всі проєкти"),
+                    "link": lambda request: reverse_lazy("admin:projects_project_changelist"),
+                },
+                {
+                    "title": _("Активні"),
+                    "link": lambda request: reverse_lazy("admin:projects_project_changelist") + "?is_active__exact=1",
+                },
+                {
+                    "title": _("Рекомендовані"),
+                    "link": lambda request: reverse_lazy("admin:projects_project_changelist") + "?is_featured__exact=1",
+                },
+            ],
+        },
+        {
+            "models": [
+                "jobs.jobposition",
+            ],
+            "items": [
+                {
+                    "title": _("Всі вакансії"),
+                    "link": lambda request: reverse_lazy("admin:jobs_jobposition_changelist"),
+                },
+                {
+                    "title": _("Активні"),
+                    "link": lambda request: reverse_lazy("admin:jobs_jobposition_changelist") + "?is_active__exact=1",
+                },
+                {
+                    "title": _("Термінові"),
+                    "link": lambda request: reverse_lazy("admin:jobs_jobposition_changelist") + "?is_urgent__exact=1",
+                },
+            ],
+        },
+        {
+            "models": [
+                "jobs.jobapplication",
+            ],
+            "items": [
+                {
+                    "title": _("Всі заявки"),
+                    "link": lambda request: reverse_lazy("admin:jobs_jobapplication_changelist"),
+                },
+                {
+                    "title": _("Нові"),
+                    "link": lambda request: reverse_lazy("admin:jobs_jobapplication_changelist") + "?is_reviewed__exact=0",
+                },
+                {
+                    "title": _("Переглянуті"),
+                    "link": lambda request: reverse_lazy("admin:jobs_jobapplication_changelist") + "?is_reviewed__exact=1",
+                },
+            ],
+        },
+        {
+            "models": [
+                "partners.partnerinquiry",
+            ],
+            "items": [
+                {
+                    "title": _("Всі запити"),
+                    "link": lambda request: reverse_lazy("admin:partners_partnerinquiry_changelist"),
+                },
+                {
+                    "title": _("Нові"),
+                    "link": lambda request: reverse_lazy("admin:partners_partnerinquiry_changelist") + "?is_processed__exact=0",
+                },
+                {
+                    "title": _("Оброблені"),
+                    "link": lambda request: reverse_lazy("admin:partners_partnerinquiry_changelist") + "?is_processed__exact=1",
                 },
             ],
         },
     ],
 }
 
+def environment_callback(request):
+    """Определение окружения для отображения в админке"""
+    return "Розробка" if DEBUG else "Продакшн"
+
 def dashboard_callback(request, context):
+    """Дополнительные данные для дашборда"""
     return context
