@@ -42,6 +42,7 @@ LOCAL_APPS = [
     'apps.jobs',
     'apps.partners',
     'apps.contacts',
+    'apps.api',
     
 ]
 UNFOLOD = [
@@ -143,15 +144,16 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# CORS settings для Next.js
+# CORS настройки (добавить если еще нет)
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Next.js dev server
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://yourdomain.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# DRF settings
+# REST Framework настройки
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -164,9 +166,22 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour'
+    }
 }
-
 # Parler settings (мультиязычность)
 PARLER_LANGUAGES = {
     None: (
@@ -578,3 +593,16 @@ def environment_callback(request):
 def dashboard_callback(request, context):
     """Дополнительные данные для дашборда"""
     return context
+
+# Кеширование Redis (добавить если еще нет)
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'ugc_api',
+        'TIMEOUT': 300,  # 5 минут по умолчанию
+    }
+}
