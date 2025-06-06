@@ -37,3 +37,8 @@ tablib==3.8.0
 tqdm==4.67.1
 tzdata==2025.2
 urllib3==2.4.0
+djangorestframework==3.16.0
+django-filter==25.1
+django-redis==5.4.0
+redis==5.0.1
+

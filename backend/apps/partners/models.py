@@ -16,6 +16,7 @@ class PartnershipInfo(TranslatableModel):
     production_capacity = models.CharField(max_length=200, blank=True, verbose_name=_("Виробнича потужність"))
     is_active = models.BooleanField(default=True, verbose_name=_("Активна"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Оновлено"))
+    work_stages_info = models.TextField()
 
     class Meta:
         verbose_name = _("Інформація для партнерів")

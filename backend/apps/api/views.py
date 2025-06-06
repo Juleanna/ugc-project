@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters,mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -9,6 +9,7 @@ from django.views.decorators.cache import cache_page
 from .serializers import *
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import GenericViewSet
+
 
 
 class HomePageViewSet(viewsets.ReadOnlyModelViewSet):
@@ -165,24 +166,23 @@ class OfficeViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({'error': 'Main office not found'}, status=404)
 
 
-class ContactInquiryViewSet(viewsets.CreateOnlyModelViewSet):
+class ContactInquiryViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """API для обращений"""
     queryset = ContactInquiry.objects.all()
     serializer_class = ContactInquirySerializer
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        
+
         # Отправка уведомления (если настроено)
         # send_contact_inquiry_notification.delay(serializer.instance.id)
-        
+
         return Response(
-            {'message': 'Обращение успешно отправлено'}, 
+            {'message': 'Обращение успешно отправлено'},
             status=status.HTTP_201_CREATED
         )
-
 
 class PartnershipInfoViewSet(viewsets.ReadOnlyModelViewSet):
     """API для информации о партнерстве"""
@@ -193,25 +193,23 @@ class PartnershipInfoViewSet(viewsets.ReadOnlyModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-
-class PartnerInquiryViewSet(viewsets.CreateOnlyModelViewSet):
+class PartnerInquiryViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """API для запросов партнеров"""
     queryset = PartnerInquiry.objects.all()
     serializer_class = PartnerInquirySerializer
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        
+
         # Отправка уведомления (если настроено)
         # send_partner_inquiry_notification.delay(serializer.instance.id)
-        
+
         return Response(
             {'message': 'Запрос успешно отправлен'}, 
             status=status.HTTP_201_CREATED
         )
-
 
 class WorkplacePhotoViewSet(viewsets.ReadOnlyModelViewSet):
     """API для фото рабочих мест"""
