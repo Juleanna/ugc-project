@@ -1,22 +1,15 @@
-from django.contrib import admin
-from django.db import models
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
-from django.urls import path, reverse
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import (
     RangeDateFilter,
     RangeNumericFilter,
-    SingleNumericFilter,
 )
-from unfold.contrib.forms.widgets import (
-    WysiwygWidget,
-    ArrayWidget,
-)
-from unfold.decorators import display
 from parler.admin import TranslatableAdmin
 from .models import ProjectCategory, Project, ProjectImage
+from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+from unfold.decorators import display
+from apps.common.admin import UnfoldTabbedTranslationAdmin  
 
 class ProjectImageInline(TabularInline):
     model = ProjectImage
@@ -31,7 +24,7 @@ class ProjectImageInline(TabularInline):
     image_preview.short_description = "Попередній перегляд"
 
 @admin.register(ProjectCategory)
-class ProjectCategoryAdmin(TranslatableAdmin, ModelAdmin):
+class ProjectCategoryAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для категорий проектов"""
     list_display = [
         'name',
@@ -111,7 +104,7 @@ class ProjectCategoryAdmin(TranslatableAdmin, ModelAdmin):
 
 
 @admin.register(Project)
-class ProjectAdmin(TranslatableAdmin, ModelAdmin):
+class ProjectAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для проектов"""
     list_display = [
         'title',

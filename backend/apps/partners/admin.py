@@ -1,25 +1,23 @@
-from django.contrib import admin
-from django.db import models
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
-from django.urls import path, reverse
-from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import (
     RangeDateFilter,
     RangeNumericFilter,
-    SingleNumericFilter,
-)
-from unfold.contrib.forms.widgets import (
-    WysiwygWidget,
-    ArrayWidget,
-)
-from unfold.decorators import display
-from parler.admin import TranslatableAdmin
+ )
 from .models import PartnershipInfo, WorkStage, PartnerInquiry
+from django.contrib import admin
+from unfold.admin import ModelAdmin
+from unfold.contrib.filters.admin import (
+    RangeDateFilter,
+    RangeNumericFilter,
+    
+)
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+from unfold.decorators import display
+from apps.common.admin import UnfoldTabbedTranslationAdmin  
 
 
 @admin.register(PartnershipInfo)
-class PartnershipInfoAdmin(TranslatableAdmin, ModelAdmin):
+class PartnershipInfoAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для информации для партнеров"""
     list_display = [
         'min_order_amount_display',
@@ -79,7 +77,7 @@ class PartnershipInfoAdmin(TranslatableAdmin, ModelAdmin):
 
 
 @admin.register(WorkStage)
-class WorkStageAdmin(TranslatableAdmin, ModelAdmin):
+class WorkStageAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для этапов работы"""
     list_display = [
         'title',

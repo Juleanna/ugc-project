@@ -1,21 +1,15 @@
-from django.contrib import admin
-from django.db import models
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
-from django.urls import path, reverse
+from .models import Service, ServiceFeature
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import (
     RangeDateFilter,
     RangeNumericFilter,
-    SingleNumericFilter,
 )
-from unfold.contrib.forms.widgets import (
-    WysiwygWidget,
-    ArrayWidget,
-)
-from unfold.decorators import display
 from parler.admin import TranslatableAdmin
-from .models import Service, ServiceFeature
+from django.contrib import admin
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+from unfold.decorators import display
+from apps.common.admin import UnfoldTabbedTranslationAdmin  
 
 
 class ServiceFeatureInline(TabularInline):
@@ -27,7 +21,7 @@ class ServiceFeatureInline(TabularInline):
     
 
 @admin.register(Service)
-class ServiceAdmin(TranslatableAdmin, ModelAdmin):
+class ServiceAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для услуг"""
     list_display = [
         'name',
@@ -142,7 +136,7 @@ class ServiceAdmin(TranslatableAdmin, ModelAdmin):
 
 
 @admin.register(ServiceFeature)
-class ServiceFeatureAdmin(TranslatableAdmin, ModelAdmin):
+class ServiceFeatureAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для особенностей услуг"""
     list_display = [
         'title',
