@@ -248,8 +248,9 @@ UNFOLD = {
     "SITE_TITLE": "UGC - Адмін панель",
     "SITE_HEADER": "Управління сайтом UGC",
     "SITE_URL": "/",
-    "SITE_ICON": lambda request: static("icon.svg"),  # опционально
-    "SITE_LOGO": lambda request: static("logo.svg"),  # опционально
+    "SITE_ICON": lambda request: static("image/favicon.ico"),  # опционально
+    
+   
     "SITE_SYMBOL": "business",  # symbol from icon set
     "SHOW_HISTORY": True,  # show/hide "History" button
     "SHOW_VIEW_ON_SITE": True,  # show/hide "View on site" button
@@ -288,7 +289,7 @@ UNFOLD = {
         },
     },
     "SIDEBAR": {
-        "show_search": False,
+        "show_search": True,
         "show_all_applications": False,
         "navigation": [
             {
@@ -566,6 +567,13 @@ UNFOLD = {
         },
     ],
 }
+
+def get_site_icon(request):
+    return static("image/favicon.ico")
+
+def get_site_logo(request):
+    return static("image/logo.png")
+
 
 def environment_callback(request):
     """Определение окружения для отображения в админке"""

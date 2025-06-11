@@ -4,6 +4,7 @@ charset-normalizer==3.4.2
 click==8.2.1
 colorama==0.4.6
 diff-match-patch==20241021
+dj-database-url==3.0.0
 Django==5.2.1
 django-ckeditor==6.7.2
 django-cors-headers==4.7.0
@@ -13,6 +14,8 @@ django-import-export==4.3.7
 django-js-asset==3.1.2
 django-modeltranslation==0.19.14
 django-parler==2.3
+django-redis==5.4.0
+django-rosetta==0.10.2
 django-unfold==0.59.0
 djangorestframework==3.16.0
 idna==3.10
@@ -22,11 +25,13 @@ numpy==2.2.6
 pandas==2.2.3
 parler==1.0.1
 pillow==11.2.1
+polib==1.2.0
 psycopg==3.2.9
 psycopg2-binary==2.9.10
 python-dateutil==2.9.0.post0
 python-decouple==3.8
 pytz==2025.2
+redis==6.2.0
 regex==2024.11.6
 requests==2.32.3
 rosetta==0.3
@@ -35,10 +40,6 @@ six==1.17.0
 sqlparse==0.5.3
 tablib==3.8.0
 tqdm==4.67.1
+typing_extensions==4.14.0
 tzdata==2025.2
 urllib3==2.4.0
-djangorestframework==3.16.0
-django-filter==25.1
-django-redis==5.4.0
-redis==5.0.1
-
