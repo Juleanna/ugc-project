@@ -1,0 +1,207 @@
+{
+  "header": {
+    "contact": "Contact",
+    "toggleNavigation": "Toggle navigation",
+    "ourAddress": "Our Address"
+  },
+  "navigation": {
+    "work": "Our Products",
+    "about": "About Company",
+    "process": "Manufacturing Process",
+    "job": "Work with Us",
+    "home": "Home"
+  },
+  "hero": {
+    "title": "Specialized Clothing Manufacturer in Ukraine.",
+    "description": "We create high-quality and reliable specialized clothing that provides comfort and safety in any conditions. Our experience and pursuit of excellence help us meet the needs of professionals in various fields. Choose comfort and safety with us!"
+  },
+  "clients": {
+    "title": "We work with leading companies in Ukraine and Europe"
+  },
+  "caseStudies": {
+    "eyebrow": "Case Studies",
+    "title": "Reliability and quality in every detail",
+    "description": "Our years of experience in manufacturing specialized clothing guarantee high quality and reliability of every product. We create clothing that provides safety and comfort in any conditions.",
+    "successfulProject": "Successful Project",
+    "readMore": "Learn More",
+    "items": {
+      "phobia": {
+        "title": "Protective Clothing for Industry",
+        "description": "Development and manufacturing of specialized clothing to protect workers in harsh conditions."
+      },
+      "familyFund": {
+        "title": "Medical Clothing",
+        "description": "Comfortable and functional medical clothing for hospital staff."
+      },
+      "unseal": {
+        "title": "Military Uniform",
+        "description": "Reliable and practical uniform for military units."
+      }
+    }
+  },
+  "services": {
+    "eyebrow": "Services",
+    "title": "We create quality specialized clothing for your needs.",
+    "description": "We manufacture specialized clothing for various industries, including military uniforms, medical clothing, as well as specialized clothing for other fields. Our products provide reliability, comfort and protection, regardless of your business specifics.",
+    "technicalSpecs": {
+      "title": "Technical Specifications Development",
+      "description": "We specialize in creating technical specifications according to your requirements. We will select materials, develop patterns and produce experimental samples to ensure the highest quality of products."
+    },
+    "tailoring": {
+      "title": "Clothing Manufacturing",
+      "description": "According to your specifications, we manufacture products using your materials or our own. Our craftsmen ensure high quality and precision in order fulfillment."
+    },
+    "logoApplication": {
+      "title": "Logo Application",
+      "description": "We offer logo or brand application services on products, using various methods including screen printing, embroidery, heat transfer and other techniques."
+    },
+    "other": {
+      "title": "Other",
+      "description": "In addition, we offer a wide range of finished products, fabrics and accessories. We also provide contracting services, adapting to your needs."
+    }
+  },
+  "testimonial": {
+    "quote": "The UGC team exceeded our expectations, providing high-quality specialized clothing and meeting deadlines. Excellent communication and professional approach made cooperation easy and effective."
+  },
+  "contact": {
+    "title": "Let's work together",
+    "description": "Choose a convenient way to contact us.",
+    "form": {
+      "title": "Contact Form",
+      "name": "Name",
+      "email": "Email",
+      "company": "Company",
+      "phone": "Phone",
+      "message": "Message",
+      "submit": "Let's discuss the project"
+    },
+    "office": {
+      "title": "Our Office",
+      "description": "Do you prefer personal meetings? We don't, but we have to list our addresses here for legal reasons."
+    },
+    "details": {
+      "email": "Email",
+      "phone": "Phone"
+    }
+  },
+  "footer": {
+    "company": "Company",
+    "socialMedia": "Social Media",
+    "newsletter": "Newsletter",
+    "emailPlaceholder": "Email address",
+    "subscribe": "Subscribe"
+  },
+  "language": {
+    "ukrainian": "Українська",
+    "english": "English",
+    "switchTo": "Switch to {{language}}"
+  },
+  "meta": {
+    "defaultTitle": "UGC - Ukrainian Reliable Clothing Company",
+    "description": "Quality specialized clothing manufacturer in Ukraine. Development, manufacturing and supply of specialized clothing for various industries."
+  },
+  "about": {
+    "title": "Our strength is collaboration",
+    "description": "We believe that our strength lies in our collaborative approach, which puts our clients at the center of everything we do.",
+    "story1": "UGC was founded by a group of enthusiasts who noticed the need for high-quality specialized clothing for Ukrainian enterprises and institutions.",
+    "story2": "At UGC, we are more than just colleagues — we are a team. We strive to create the best specialized clothing and provide comfortable working conditions for our employees.",
+    "stats": {
+      "employees": "Experienced employees",
+      "clients": "Satisfied clients",
+      "revenue": "Annual turnover"
+    },
+    "culture": {
+      "eyebrow": "Our values",
+      "title": "Balance with deep focus on quality",
+      "description": "We strive to create high-quality specialized clothing, adhering to the highest standards of production and customer service."
+    },
+    "values": {
+      "quality": "Quality",
+      "qualityDesc": "Each product undergoes thorough quality checks at all stages of production.",
+      "innovation": "Innovation",
+      "innovationDesc": "We constantly improve production technologies and implement new solutions.",
+      "reliability": "Reliability",
+      "reliabilityDesc": "Our clients can count on us at any time and under any circumstances.",
+      "sustainability": "Responsibility",
+      "sustainabilityDesc": "We care about the environment and social responsibility.",
+      "partnership": "Partnership",
+      "partnershipDesc": "We build long-term partnerships with our clients.",
+      "excellence": "Excellence",
+      "excellenceDesc": "We strive for excellence in every detail of our work."
+    }
+  },
+  "work": {
+    "title": "Proven excellence of our solutions",
+    "description": "We are proud to work with leading organizations to create innovative and functional specialized clothing that meets the highest standards of quality and safety.",
+    "service": "Service",
+    "readCaseStudy": "Read Case Study"
+  },
+  "job": {
+    "eyebrow": "Career",
+    "title": "Open positions and opportunities",
+    "description": "Join our team of professionals and develop your career in an innovative environment.",
+    "publicationDate": "Publication date",
+    "department": "Department",
+    "requirements": "Requirements:",
+    "learnMore": "Learn more"
+  },
+  "process": {
+    "title": "Our manufacturing process",
+    "description": "We have a clearly structured manufacturing process that guarantees high quality of the final product and satisfaction of all client requirements.",
+    "discover": {
+      "title": "Research",
+      "description1": "We start with a detailed study of your needs and requirements. Our team conducts a thorough analysis of your business specifics, working conditions and special needs.",
+      "description2": "At this stage, we determine technical characteristics, materials, design and functional features of the future specialized clothing.",
+      "included": "What's included",
+      "analysis": "Needs analysis",
+      "consultation": "Expert consultation",
+      "materials": "Material selection",
+      "requirements": "Technical requirements",
+      "design": "Design concept",
+      "timeline": "Timeline planning"
+    },
+    "build": {
+      "title": "Development",
+      "description1": "Based on collected data, we develop technical documentation, create patterns and produce first samples for testing.",
+      "description2": "Each sample undergoes strict quality control and testing in real-world conditions.",
+      "description3": "We involve you in the development process, ensuring constant feedback and the possibility of making corrections.",
+      "included": "What's included",
+      "documentation": "Technical documentation",
+      "patterns": "Pattern development",
+      "prototypes": "Sample production",
+      "testing": "Quality testing",
+      "feedback": "Feedback collection",
+      "improvements": "Improvements"
+    },
+    "deliver": {
+      "title": "Production",
+      "description1": "After sample approval, we proceed to serial production. Our modern equipment and experienced specialists guarantee high quality of each product.",
+      "description2": "We control every stage of production, from material cutting to final quality control of finished products.",
+      "description3": "Finished products are packaged according to your requirements and delivered within established timeframes.",
+      "included": "What's included",
+      "production": "Serial production",
+      "quality": "Quality control",
+      "packaging": "Packaging",
+      "delivery": "Delivery",
+      "support": "After-sales support",
+      "warranty": "Warranty service"
+    },
+    "values": {
+      "eyebrow": "Our principles",
+      "title": "Quality at every stage",
+      "description": "We adhere to the highest standards of quality and professionalism in every specialized clothing manufacturing process.",
+      "quality": "Quality",
+      "qualityDesc": "Each product undergoes strict quality control at all stages of production.",
+      "innovation": "Innovation",
+      "innovationDesc": "We use modern technologies and materials to create the best solutions.",
+      "efficiency": "Efficiency",
+      "efficiencyDesc": "Optimized processes allow us to meet deadlines and budgets.",
+      "reliability": "Reliability",
+      "reliabilityDesc": "We guarantee stable quality and timely order fulfillment.",
+      "sustainability": "Sustainability",
+      "sustainabilityDesc": "We care about the environment by using eco-friendly materials.",
+      "support": "Support",
+      "supportDesc": "We provide full support to clients at all stages of cooperation."
+    }
+  }
+}
