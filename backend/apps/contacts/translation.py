@@ -1,8 +1,11 @@
-from ckeditor_uploader.fields import RichTextUploadingField
 from modeltranslation.translator import translator, TranslationOptions
-from .models import Office
+from .models import Office, ContactInquiry
 
-class YourModelTranslationOptions(TranslationOptions):
-    fields = ('your_richtext_field',)  # Укажите поле для перевода
+class OfficeTranslationOptions(TranslationOptions):
+    fields = ('name', 'address', 'description')
 
-translator.register(Office, YourModelTranslationOptions)
+class ContactInquiryTranslationOptions(TranslationOptions):
+    fields = ('name', 'subject', 'message', 'response')
+
+translator.register(Office, OfficeTranslationOptions)
+translator.register(ContactInquiry, ContactInquiryTranslationOptions)

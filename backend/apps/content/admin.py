@@ -1,25 +1,15 @@
 from django.contrib import admin
-from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.urls import path, reverse
-from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import (
     RangeDateFilter,
-    RangeNumericFilter,
-    SingleNumericFilter,
-)
-from unfold.contrib.forms.widgets import (
-    WysiwygWidget,
-    ArrayWidget,
 )
 from unfold.decorators import display
-from parler.admin import TranslatableAdmin
+from apps.common.admin import UnfoldTabbedTranslationAdmin  
 from .models import HomePage, AboutPage, TeamMember, Certificate, ProductionPhoto
 
-
 @admin.register(HomePage)
-class HomePageAdmin(TranslatableAdmin, ModelAdmin):
+class HomePageAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для главной страницы"""
     list_display = [
         'years_experience', 
@@ -32,7 +22,7 @@ class HomePageAdmin(TranslatableAdmin, ModelAdmin):
         'is_active',
         ('updated_at', RangeDateFilter),
     ]
-    search_fields = ['translations__company_description']
+    search_fields = ['company_description']
     
     fieldsets = [
         (_("Контент"), {
@@ -63,20 +53,17 @@ class HomePageAdmin(TranslatableAdmin, ModelAdmin):
             '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Неактивна</span>'
         )
 
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
-
+   
 
 @admin.register(AboutPage)
-class AboutPageAdmin(TranslatableAdmin, ModelAdmin):
+class AboutPageAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для страницы О нас"""
     list_display = ['is_active_display', 'updated_at']
     list_filter = [
         'is_active',
         ('updated_at', RangeDateFilter),
     ]
-    search_fields = ['translations__history_text']
+    search_fields = ['history_text']
     
     fieldsets = [
         (_("Основний контент"), {
@@ -103,13 +90,9 @@ class AboutPageAdmin(TranslatableAdmin, ModelAdmin):
             '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Неактивна</span>'
         )
 
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
-
 
 @admin.register(TeamMember)
-class TeamMemberAdmin(TranslatableAdmin, ModelAdmin):
+class TeamMemberAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для команды"""
     list_display = [
         'name', 
@@ -124,9 +107,9 @@ class TeamMemberAdmin(TranslatableAdmin, ModelAdmin):
         'is_management', 
         'is_active',
     ]
-    search_fields = ['translations__name', 'translations__position']
+    search_fields = ['name', 'position']
     list_editable = ['order', 'is_active']
-    ordering = ['order', 'translations__name']
+    ordering = ['order', 'name']
     
     fieldsets = [
         (_("Основна інформація"), {
@@ -195,7 +178,7 @@ class TeamMemberAdmin(TranslatableAdmin, ModelAdmin):
 
 
 @admin.register(Certificate)
-class CertificateAdmin(TranslatableAdmin, ModelAdmin):
+class CertificateAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для сертификатов"""
     list_display = [
         'title', 
@@ -209,7 +192,7 @@ class CertificateAdmin(TranslatableAdmin, ModelAdmin):
         ('issued_date', RangeDateFilter),
         'issuing_organization',
     ]
-    search_fields = ['translations__title', 'issuing_organization']
+    search_fields = ['title', 'issuing_organization']
     date_hierarchy = 'issued_date'
     ordering = ['-issued_date']
     
@@ -253,7 +236,7 @@ class CertificateAdmin(TranslatableAdmin, ModelAdmin):
 
 
 @admin.register(ProductionPhoto)
-class ProductionPhotoAdmin(TranslatableAdmin, ModelAdmin):
+class ProductionPhotoAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для фото производства"""
     list_display = [
         'title',
@@ -268,7 +251,7 @@ class ProductionPhotoAdmin(TranslatableAdmin, ModelAdmin):
         'is_featured',
         'is_active',
     ]
-    search_fields = ['translations__title']
+    search_fields = ['title']
     list_editable = ['order', 'is_active', 'is_featured']
     ordering = ['order']
     

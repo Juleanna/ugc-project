@@ -1,16 +1,14 @@
 from django.db import models
 from parler.models import TranslatableModel, TranslatedFields
-from ckeditor.fields import RichTextField
+from ckeditor_uploader.fields import RichTextUploadingField
 from django.utils.translation import gettext_lazy as _
 
 class Service(TranslatableModel):
     """Услуги компании"""
-    translations = TranslatedFields(
-        name=models.CharField(max_length=200, verbose_name=_("Назва")),
-        short_description=models.TextField(verbose_name=_("Короткий опис")),
-        detailed_description=RichTextField(verbose_name=_("Детальний опис")),
-        benefits=RichTextField(blank=True, verbose_name=_("Переваги")),
-    )
+    name=models.CharField(max_length=200, verbose_name=_("Назва"))
+    short_description=models.TextField(verbose_name=_("Короткий опис"))
+    detailed_description=RichTextUploadingField(verbose_name=_("Детальний опис"))
+    benefits=RichTextUploadingField(blank=True, verbose_name=_("Переваги"))
     
     slug = models.SlugField(unique=True, verbose_name=_("Слаг"))
     icon = models.ImageField(upload_to='services/icons/', blank=True, verbose_name=_("Іконка"))
@@ -31,11 +29,9 @@ class Service(TranslatableModel):
 class ServiceFeature(TranslatableModel):
     """Особенности услуги"""
     service = models.ForeignKey(Service, related_name='features', on_delete=models.CASCADE, verbose_name=_("Послуга"))
-    translations = TranslatedFields(
-        title=models.CharField(max_length=100, verbose_name=_("Назва")),
-        description=models.TextField(verbose_name=_("Опис")),
-    )
-    
+    title=models.CharField(max_length=100, verbose_name=_("Назва"))
+    description=models.TextField(verbose_name=_("Опис"))
+      
     icon = models.CharField(max_length=50, blank=True, help_text=_("CSS клас для іконки"), verbose_name=_("Іконка"))
     order = models.PositiveIntegerField(default=0, verbose_name=_("Порядок"))
 

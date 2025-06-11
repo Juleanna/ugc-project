@@ -1,30 +1,16 @@
+from .models import Office, ContactInquiry
 from django.contrib import admin
-from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse, path
-from django.utils.safestring import mark_safe
-from datetime import datetime
-from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import (
     RangeDateFilter,
-    RangeNumericFilter,
-    SingleNumericFilter,
-    SliderNumericFilter,
-)
-from unfold.contrib.forms.widgets import (
-    WysiwygWidget,
-    ArrayWidget,
 )
 from unfold.decorators import display
-from parler.admin import TranslatableAdmin
-from .models import Office, ContactInquiry
-from django.forms import CheckboxInput
-from django.http import HttpResponse
+from apps.common.admin import UnfoldTabbedTranslationAdmin  
 
 
 @admin.register(Office)
-class OfficeAdmin(TranslatableAdmin, ModelAdmin):
+class OfficeAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для офисов и фабрик"""
     list_display = [
         'name', 
@@ -43,8 +29,8 @@ class OfficeAdmin(TranslatableAdmin, ModelAdmin):
         'is_active',
     ]
     list_editable = ['order', 'is_active']
-    search_fields = ['translations__name', 'translations__address', 'phone', 'email']
-    ordering = ['order', 'translations__name']
+    search_fields = ['name', 'address', 'phone', 'email']
+    ordering = ['order', 'name']
     
     fieldsets = [
         (_("Основна інформація"), {
@@ -98,10 +84,7 @@ class OfficeAdmin(TranslatableAdmin, ModelAdmin):
             '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Неактивний</span>'
         )
     
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-        models.BooleanField: {"widget": CheckboxInput},
-    }
+  
     
     actions = ['make_active', 'make_inactive', 'mark_as_main']
     
@@ -127,7 +110,7 @@ class OfficeAdmin(TranslatableAdmin, ModelAdmin):
 
 
 @admin.register(ContactInquiry)
-class ContactInquiryAdmin(ModelAdmin):
+class ContactInquiryAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для обращений через форму обратной связи"""
     list_display = [
         'name',
@@ -197,9 +180,7 @@ class ContactInquiryAdmin(ModelAdmin):
             '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Нове</span>'
         )
     
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
+   
     
     actions = ['mark_processed', 'mark_unprocessed']
     

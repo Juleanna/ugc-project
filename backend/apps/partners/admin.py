@@ -33,8 +33,8 @@ class PartnershipInfoAdmin(TranslatableAdmin, ModelAdmin):
         ('min_order_amount', RangeNumericFilter),
     ]
     search_fields = [
-        'translations__cooperation_terms',
-        'translations__faq_content',
+        'cooperation_terms',
+        'faq_content',
         'production_capacity'
     ]
     
@@ -76,9 +76,6 @@ class PartnershipInfoAdmin(TranslatableAdmin, ModelAdmin):
             '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Неактивна</span>'
         )
 
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
 
 
 @admin.register(WorkStage)
@@ -91,8 +88,8 @@ class WorkStageAdmin(TranslatableAdmin, ModelAdmin):
         'order'
     ]
     search_fields = [
-        'translations__title',
-        'translations__description'
+        'title',
+        'description'
     ]
     list_editable = ['order']
     ordering = ['order']
@@ -122,9 +119,6 @@ class WorkStageAdmin(TranslatableAdmin, ModelAdmin):
             )
         return "Немає іконки"
 
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
 
 
 @admin.register(PartnerInquiry)

@@ -1,16 +1,13 @@
 from django.db import models
-from parler.models import TranslatableModel, TranslatedFields
-from ckeditor.fields import RichTextField
 from django.utils.translation import gettext_lazy as _
+from ckeditor_uploader.fields import RichTextUploadingField
 
-class PartnershipInfo(TranslatableModel):
+class PartnershipInfo(models.Model):
     """Информация для партнеров"""
-    translations = TranslatedFields(
-        cooperation_terms=RichTextField(verbose_name=_("Умови співпраці")),
-        work_stages=RichTextField(verbose_name=_("Етапи роботи")),
-        faq_content=RichTextField(verbose_name=_("FAQ для замовників")),
-        benefits=RichTextField(verbose_name=_("Переваги співпраці"), blank=True),
-    )
+    cooperation_terms=RichTextUploadingField(verbose_name=_("Умови співпраці"))
+    work_stages=RichTextUploadingField(verbose_name=_("Етапи роботи"))
+    faq_content=RichTextUploadingField(verbose_name=_("FAQ для замовників"))
+    benefits=RichTextUploadingField(verbose_name=_("Переваги співпраці"), blank=True)
     
     min_order_amount = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Мін. сума замовлення"))
     production_capacity = models.CharField(max_length=200, blank=True, verbose_name=_("Виробнича потужність"))
@@ -23,13 +20,11 @@ class PartnershipInfo(TranslatableModel):
         verbose_name_plural = _("Інформація для партнерів")
 
 
-class WorkStage(TranslatableModel):
+class WorkStage(models.Model):
     """Этапы работы с клиентами"""
-    translations = TranslatedFields(
-        title=models.CharField(max_length=100, verbose_name=_("Назва")),
-        description=models.TextField(verbose_name=_("Опис")),
-    )
-    
+    title=models.CharField(max_length=100, verbose_name=_("Назва"))
+    description=models.TextField(verbose_name=_("Опис"))
+   
     icon = models.CharField(max_length=50, blank=True, verbose_name=_("Іконка"))
     order = models.PositiveIntegerField(default=0, verbose_name=_("Порядок"))
     duration = models.CharField(max_length=50, blank=True, verbose_name=_("Тривалість"))

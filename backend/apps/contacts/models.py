@@ -1,15 +1,12 @@
 from django.db import models
-from parler.models import TranslatableModel, TranslatedFields
 from django.utils.translation import gettext_lazy as _
 from ckeditor_uploader.fields import RichTextUploadingField
 
-class Office(TranslatableModel):
+class Office(models.Model):
     """Офіси та фабрики"""
-    translations = TranslatedFields(
-        name=models.CharField(max_length=100, verbose_name=_("Назва")),
-        address=RichTextUploadingField(verbose_name=_("Адреса")),
-        description=RichTextUploadingField(blank=True, verbose_name=_("Опис")),
-    )
+    name=models.CharField(max_length=100, verbose_name=_("Назва"))
+    address=RichTextUploadingField(verbose_name=_("Адреса"))
+    description=RichTextUploadingField(blank=True, verbose_name=_("Опис"))
     
     office_type = models.CharField(
         max_length=50,

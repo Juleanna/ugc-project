@@ -37,7 +37,7 @@ class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Service.objects.filter(is_active=True).order_by('order')
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['is_featured']
-    search_fields = ['translations__name', 'translations__short_description']
+    search_fields = ['name', 'short_description']
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -73,7 +73,7 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Project.objects.filter(is_active=True).order_by('-project_date')
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'is_featured']
-    search_fields = ['translations__title', 'client_name', 'materials_used']
+    search_fields = ['title', 'client_name', 'materials_used']
     ordering_fields = ['project_date', 'created_at']
     ordering = ['-project_date']
     
@@ -114,7 +114,7 @@ class JobPositionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = JobPosition.objects.filter(is_active=True).order_by('-created_at')
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['employment_type', 'is_urgent', 'location']
-    search_fields = ['translations__title', 'location']
+    search_fields = ['title', 'location']
     
     def get_serializer_class(self):
         if self.action == 'retrieve':

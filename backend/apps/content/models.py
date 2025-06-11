@@ -1,15 +1,12 @@
 from django.db import models
-from parler.models import TranslatableModel, TranslatedFields
-from ckeditor.fields import RichTextField
 from django.utils.translation import gettext_lazy as _
+from ckeditor_uploader.fields import RichTextUploadingField
 
-class HomePage(TranslatableModel):
+class HomePage(models.Model):
     """Контент главной страницы"""
-    translations = TranslatedFields(
-        company_description=RichTextField(verbose_name=_("Короткий опис компанії")),
-        mission_text=models.TextField(verbose_name=_("Місія"), blank=True),
-        values_text=models.TextField(verbose_name=_("Цінності"), blank=True),
-    )
+    company_description=RichTextUploadingField(verbose_name=_("Короткий опис компанії"))
+    mission_text=models.TextField(verbose_name=_("Місія"), blank=True)
+    values_text=models.TextField(verbose_name=_("Цінності"), blank=True)
     
     hero_video = models.FileField(upload_to='videos/', blank=True, null=True)
     hero_image = models.ImageField(upload_to='hero/', blank=True, null=True)
@@ -24,14 +21,12 @@ class HomePage(TranslatableModel):
         verbose_name_plural = _("Головна сторінка")
 
 
-class AboutPage(TranslatableModel):
+class AboutPage(models.Model):
     """Страница О нас"""
-    translations = TranslatedFields(
-        history_text=RichTextField(verbose_name=_("Історія компанії")),
-        mission_text=RichTextField(verbose_name=_("Місія")),
-        values_text=RichTextField(verbose_name=_("Цінності")),
-        social_responsibility=RichTextField(verbose_name=_("Соціальна відповідальність"), blank=True),
-    )
+    history_text=RichTextUploadingField(verbose_name=_("Історія компанії"))
+    mission_text=RichTextUploadingField(verbose_name=_("Місія"))
+    values_text=RichTextUploadingField(verbose_name=_("Цінності"))
+    social_responsibility=RichTextUploadingField(verbose_name=_("Соціальна відповідальність"), blank=True)
     
     is_active = models.BooleanField(default=True, verbose_name=_("Активна"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Оновлено"))
@@ -41,13 +36,11 @@ class AboutPage(TranslatableModel):
         verbose_name_plural = _("Сторінка 'Про нас'")
 
 
-class TeamMember(TranslatableModel):
+class TeamMember(models.Model):
     """Команда/Руководство"""
-    translations = TranslatedFields(
-        name=models.CharField(max_length=100, verbose_name=_("Ім'я")),
-        position=models.CharField(max_length=100, verbose_name=_("Посада")),
-        bio=models.TextField(blank=True, verbose_name=_("Біографія")),
-    )
+    name=models.CharField(max_length=100, verbose_name=_("Ім'я"))
+    position=models.CharField(max_length=100, verbose_name=_("Посада"))
+    bio=RichTextUploadingField(blank=True, verbose_name=_("Біографія"))
     
     photo = models.ImageField(upload_to='team/', verbose_name=_("Фото"))
     email = models.EmailField(blank=True, verbose_name=_("Електронна пошта"))
@@ -62,12 +55,10 @@ class TeamMember(TranslatableModel):
         verbose_name_plural = _("Команда")
 
 
-class Certificate(TranslatableModel):
+class Certificate(models.Model):
     """Сертификаты и награды"""
-    translations = TranslatedFields(
-        title=models.CharField(max_length=200, verbose_name=_("Назва")),
-        description=models.TextField(blank=True, verbose_name=_("Опис")),
-    )
+    title=models.CharField(max_length=200, verbose_name=_("Назва"))
+    description=models.TextField(blank=True, verbose_name=_("Опис"))
     
     image = models.ImageField(upload_to='certificates/', verbose_name=_("Зображення"))
     issued_date = models.DateField(verbose_name=_("Дата видачі"))
@@ -81,12 +72,10 @@ class Certificate(TranslatableModel):
         verbose_name_plural = _("Сертифікати")
 
 
-class ProductionPhoto(TranslatableModel):
+class ProductionPhoto(models.Model):
     """Фото с производства"""
-    translations = TranslatedFields(
-        title=models.CharField(max_length=100, verbose_name=_("Назва")),
-        description=models.TextField(blank=True, verbose_name=_("Опис")),
-    )
+    title=models.CharField(max_length=100, verbose_name=_("Назва"))
+    description=models.TextField(blank=True, verbose_name=_("Опис"))
     
     image = models.ImageField(upload_to='production/', verbose_name=_("Зображення"))
     order = models.PositiveIntegerField(default=0, verbose_name=_("Порядок"))

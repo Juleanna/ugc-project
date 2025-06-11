@@ -17,6 +17,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
 # Application definition
 
 DJANGO_APPS = [
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -66,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'ugc_backend.urls'
@@ -134,17 +136,10 @@ LANGUAGES = [
 ]
 
 LOCALE_PATHS = [
-    BASE_DIR / 'locale',  # Укажите путь для хранения файлов перевода
+    BASE_DIR / 'locale',  
 ]
 
-# Static files
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# CORS настройки (добавить если еще нет)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -182,24 +177,10 @@ REST_FRAMEWORK = {
         'user': '1000/hour'
     }
 }
-# Parler settings (мультиязычность)
-PARLER_LANGUAGES = {
-    None: (
-        {'code': 'uk'},
-        {'code': 'en'},
-    ),
-    'default': {
-        'fallbacks': ['uk'],
-        'hide_untranslated': False,
-    }
-}
 
-
-CKEDITOR_UPLOAD_PATH = "uploads/"
-# Максимальный размер загружаемых файлов
-CKEDITOR_IMAGE_BACKEND = "pillow"
-CKEDITOR_RESTRICT_BY_USER = True  # Ограничить доступ к файлам текущего пользователя (опционально)
-CKEDITOR_ALLOW_NONIMAGE_FILES = False  # Разрешить только изображения
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'uk'
+MODELTRANSLATION_LANGUAGES = ('uk', 'en')
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('uk',)
 
 CKEDITOR_CONFIGS = {
     'default': {
@@ -279,10 +260,10 @@ UNFOLD = {
         "redirect_after": lambda request: reverse_lazy("admin:index"),
     },
     "STYLES": [
-        lambda request: static("css/styles.css"),  # опционально
+        #lambda request: static("css/styles.css"),  # опционально
     ],
     "SCRIPTS": [
-        lambda request: static("js/script.js"),  # опционально
+        #lambda request: static("js/script.js"),  # опционально
     ],
     "COLORS": {
         "primary": {
@@ -606,3 +587,33 @@ CACHES = {
         'TIMEOUT': 300,  # 5 минут по умолчанию
     }
 }
+
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Додайте STATICFILES_DIRS
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+# CKEditor media files
+CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_IMAGE_BACKEND = "pillow"
+
+
+CKEDITOR_RESTRICT_BY_USER = True
+CKEDITOR_ALLOW_NONIMAGE_FILES = False
+
+# Важливо! Додайте це для правильної роботи завантаження:
+CKEDITOR_BROWSE_SHOW_DIRS = True
+CKEDITOR_UPLOAD_SLUGIFY_FILENAME = True
+
+# Переконайтеся, що MEDIA налаштування правильні:
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Для табів в адмінці
+MODELTRANSLATION_ENABLE_FALLBACKS = True
+MODELTRANSLATION_PREPOPULATE_LANGUAGE = 'uk'

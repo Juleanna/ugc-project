@@ -1,14 +1,11 @@
 from django.db import models
-from parler.models import TranslatableModel, TranslatedFields
-from ckeditor.fields import RichTextField
 from django.utils.translation import gettext_lazy as _
+from ckeditor_uploader.fields import RichTextUploadingField
 
-class ProjectCategory(TranslatableModel):
+class ProjectCategory(models.Model):
     """Категории проектов"""
-    translations = TranslatedFields(
-        name=models.CharField(max_length=100, verbose_name=_("Назва")),
-        description=models.TextField(blank=True, verbose_name=_("Опис")),
-    )
+    name=models.CharField(max_length=100, verbose_name=_("Назва"))
+    description=RichTextUploadingField(blank=True, verbose_name=_("Опис"))
     
     slug = models.SlugField(unique=True, verbose_name=_("Слаг"))
     image = models.ImageField(upload_to='project_categories/', blank=True, verbose_name=_("Зображення"))
@@ -21,16 +18,14 @@ class ProjectCategory(TranslatableModel):
         verbose_name_plural = _("Категорії проєктів")
 
 
-class Project(TranslatableModel):
+class Project(models.Model):
     """Проекты/Портфолио"""
-    translations = TranslatedFields(
-        title=models.CharField(max_length=200, verbose_name=_("Назва")),
-        short_description=models.TextField(verbose_name=_("Короткий опис")),
-        detailed_description=RichTextField(verbose_name=_("Детальний опис")),
-        challenge=RichTextField(blank=True, verbose_name=_("Завдання")),
-        solution=RichTextField(blank=True, verbose_name=_("Рішення")),
-        result=RichTextField(blank=True, verbose_name=_("Результат")),
-    )
+    title=models.CharField(max_length=200, verbose_name=_("Назва"))
+    short_description=RichTextUploadingField(verbose_name=_("Короткий опис"))
+    detailed_description=RichTextUploadingField(verbose_name=_("Детальний опис"))
+    challenge=RichTextUploadingField(blank=True, verbose_name=_("Завдання"))
+    solution=RichTextUploadingField(blank=True, verbose_name=_("Рішення"))
+    result=RichTextUploadingField(blank=True, verbose_name=_("Результат"))
     
     category = models.ForeignKey(ProjectCategory, on_delete=models.CASCADE, related_name='projects', verbose_name=_("Категорія"))
     slug = models.SlugField(unique=True, verbose_name=_("Слаг"))

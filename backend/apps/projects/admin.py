@@ -45,11 +45,11 @@ class ProjectCategoryAdmin(TranslatableAdmin, ModelAdmin):
         'is_active',
     ]
     search_fields = [
-        'translations__name',
-        'translations__description'
+        'name',
+        'description'
     ]
     list_editable = ['order', 'is_active']
-    ordering = ['order', 'translations__name']
+    ordering = ['order', 'name']
     
     fieldsets = [
         (_("Основна інформація"), {
@@ -93,10 +93,7 @@ class ProjectCategoryAdmin(TranslatableAdmin, ModelAdmin):
             count
         )
     
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
-    
+      
     actions = ['make_active', 'make_inactive']
     
     @admin.action(description=_("Позначити як активні"))
@@ -137,14 +134,14 @@ class ProjectAdmin(TranslatableAdmin, ModelAdmin):
         ('quantity', RangeNumericFilter),
     ]
     search_fields = [
-        'translations__title',
-        'translations__short_description',
-        'translations__detailed_description',
+        'title',
+        'short_description',
+        'detailed_description',
         'client_name',
         'materials_used'
     ]
     list_editable = ['is_featured', 'is_active']
-    ordering = ['-project_date', 'translations__title']
+    ordering = ['-project_date', 'title']
     date_hierarchy = 'project_date'
     
     inlines = [ProjectImageInline]

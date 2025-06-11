@@ -1,18 +1,15 @@
 from django.db import models
-from parler.models import TranslatableModel, TranslatedFields
-from ckeditor.fields import RichTextField
 from django.utils.translation import gettext_lazy as _
+from ckeditor_uploader.fields import RichTextUploadingField
 
-class JobPosition(TranslatableModel):
+class JobPosition(models.Model):
     """Вакансии"""
-    translations = TranslatedFields(
-        title=models.CharField(max_length=200, verbose_name=_("Назва вакансії")),
-        description=RichTextField(verbose_name=_("Опис")),
-        requirements=RichTextField(verbose_name=_("Вимоги")),
-        responsibilities=RichTextField(verbose_name=_("Обов'язки")),
-        benefits=RichTextField(blank=True, verbose_name=_("Переваги")),
-    )
-    
+    title=models.CharField(max_length=200, verbose_name=_("Назва вакансії"))
+    description=RichTextUploadingField(verbose_name=_("Опис"))
+    requirements=RichTextUploadingField(verbose_name=_("Вимоги"))
+    responsibilities=RichTextUploadingField(verbose_name=_("Обов'язки"))
+    benefits=RichTextUploadingField(blank=True, verbose_name=_("Переваги"))
+        
     slug = models.SlugField(unique=True, verbose_name=_("URL"))
     
     employment_type = models.CharField(max_length=50, choices=[
@@ -56,13 +53,11 @@ class JobApplication(models.Model):
         verbose_name_plural = _("Заявки на вакансії")
 
 
-class WorkplacePhoto(TranslatableModel):
+class WorkplacePhoto(models.Model):
     """Фото с рабочих мест"""
-    translations = TranslatedFields(
-        title=models.CharField(max_length=100, verbose_name=_("Назва")),
-        description=models.TextField(blank=True, verbose_name=_("Опис")),
-    )
-    
+    title=models.CharField(max_length=100, verbose_name=_("Назва"))
+    description=models.TextField(blank=True, verbose_name=_("Опис"))
+       
     image = models.ImageField(upload_to='workplace/', verbose_name=_("Зображення"))
     order = models.PositiveIntegerField(default=0, verbose_name=_("Порядок"))
     is_active = models.BooleanField(default=True, verbose_name=_("Активний"))

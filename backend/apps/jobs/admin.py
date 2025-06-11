@@ -1,25 +1,20 @@
 from django.contrib import admin
-from django.db import models
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
-from django.urls import path, reverse
-from unfold.admin import ModelAdmin, TabularInline
+from unfold.admin import ModelAdmin
 from unfold.contrib.filters.admin import (
     RangeDateFilter,
     RangeNumericFilter,
-    SingleNumericFilter,
+    
 )
-from unfold.contrib.forms.widgets import (
-    WysiwygWidget,
-    ArrayWidget,
-)
-from unfold.decorators import display
-from parler.admin import TranslatableAdmin
 from .models import JobPosition, JobApplication, WorkplacePhoto
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+from unfold.decorators import display
+from apps.common.admin import UnfoldTabbedTranslationAdmin  
+
 
 
 @admin.register(JobPosition)
-class JobPositionAdmin(TranslatableAdmin, ModelAdmin):
+class JobPositionAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для вакансий"""
     list_display = [
         'title',
@@ -44,13 +39,13 @@ class JobPositionAdmin(TranslatableAdmin, ModelAdmin):
         'location',
     ]
     search_fields = [
-        'translations__title',
-        'translations__description',
+        'title',
+        'description',
         'location',
         'experience_required'
     ]
     list_editable = ['is_active', 'is_urgent']
-    ordering = ['-created_at', 'translations__title']
+    ordering = ['-created_at', 'title']
     date_hierarchy = 'created_at'
     
     fieldsets = [
@@ -127,10 +122,7 @@ class JobPositionAdmin(TranslatableAdmin, ModelAdmin):
             count
         )
 
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
-    
+      
     actions = ['make_active', 'make_inactive', 'mark_as_urgent', 'unmark_as_urgent']
     
     @admin.action(description=_("Позначити як активні"))
@@ -181,7 +173,7 @@ class JobApplicationAdmin(ModelAdmin):
         'last_name',
         'email',
         'phone',
-        'position__translations__title'
+        'position'
     ]
     list_editable = ['is_reviewed']
     ordering = ['-created_at']
@@ -248,7 +240,7 @@ class JobApplicationAdmin(ModelAdmin):
 
 
 @admin.register(WorkplacePhoto)
-class WorkplacePhotoAdmin(TranslatableAdmin, ModelAdmin):
+class WorkplacePhotoAdmin(UnfoldTabbedTranslationAdmin):
     """Админка для фото рабочих мест"""
     list_display = [
         'title',
@@ -261,8 +253,8 @@ class WorkplacePhotoAdmin(TranslatableAdmin, ModelAdmin):
         'is_active',
     ]
     search_fields = [
-        'translations__title',
-        'translations__description'
+        'title',
+        'description'
     ]
     list_editable = ['order', 'is_active']
     ordering = ['order']

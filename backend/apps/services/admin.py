@@ -25,10 +25,6 @@ class ServiceFeatureInline(TabularInline):
     min_num = 0
     fields = ['title', 'description', 'icon', 'order']
     
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
-
 
 @admin.register(Service)
 class ServiceAdmin(TranslatableAdmin, ModelAdmin):
@@ -51,12 +47,12 @@ class ServiceAdmin(TranslatableAdmin, ModelAdmin):
         ('min_order_quantity', RangeNumericFilter),
     ]
     search_fields = [
-        'translations__name',
-        'translations__short_description',
-        'translations__detailed_description'
+        'name',
+        'short_description',
+        'detailed_description'
     ]
     list_editable = ['order', 'is_featured', 'is_active']
-    ordering = ['order', 'translations__name']
+    ordering = ['order', 'name']
     date_hierarchy = 'created_at'
     
     inlines = [ServiceFeatureInline]
@@ -117,9 +113,7 @@ class ServiceAdmin(TranslatableAdmin, ModelAdmin):
             count
         )
 
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
+
     
     actions = ['make_active', 'make_inactive', 'mark_as_featured', 'unmark_as_featured']
     
@@ -160,9 +154,9 @@ class ServiceFeatureAdmin(TranslatableAdmin, ModelAdmin):
         'service',
     ]
     search_fields = [
-        'translations__title',
-        'translations__description',
-        'service__translations__name'
+        'title',
+        'description',
+        'name'
     ]
     list_editable = ['order']
     ordering = ['service', 'order']
@@ -189,7 +183,3 @@ class ServiceFeatureAdmin(TranslatableAdmin, ModelAdmin):
         return "Немає іконки"
 
     autocomplete_fields = ['service']
-    
-    formfield_overrides = {
-        models.TextField: {"widget": WysiwygWidget},
-    }
