@@ -7,7 +7,7 @@ from django.conf.urls.i18n import i18n_patterns
 from rest_framework import permissions
 
 urlpatterns = [
-    path('', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('api/v1/', include('apps.api.urls')),
     path('rosetta/', include('rosetta.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),  # Важливо!

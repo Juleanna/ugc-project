@@ -28,11 +28,13 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
+    'django_filters',
     'corsheaders',
     'parler', 
     'rosetta',
     'ckeditor',
     'ckeditor_uploader',
+
 ]
 
 LOCAL_APPS = [
@@ -140,13 +142,6 @@ LOCALE_PATHS = [
 ]
 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://yourdomain.com",
-]
-
-CORS_ALLOW_CREDENTIALS = True
 
 # REST Framework настройки
 REST_FRAMEWORK = {
@@ -625,3 +620,43 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Для табів в адмінці
 MODELTRANSLATION_ENABLE_FALLBACKS = True
 MODELTRANSLATION_PREPOPULATE_LANGUAGE = 'uk'
+
+# CORS налаштування
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    # Додайте ваш production домен
+    # "https://yourdomain.com",
+]
+
+# Або для розробки можна дозволити всі origins (НЕ використовуйте в production!)
+# CORS_ALLOW_ALL_ORIGINS = True
+
+# Дозволені методи
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Дозволені заголовки
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Дозволити credentials
+CORS_ALLOW_CREDENTIALS = True
+
+# Префлайт кеш
+CORS_PREFLIGHT_MAX_AGE = 86400
