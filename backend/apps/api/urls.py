@@ -2,7 +2,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from backend.apps.api.webhooks import TranslationWebhookView
+from apps.api.webhooks import TranslationWebhookView
 from . import views
 
 # Імпортуємо views для перекладів (створіть цей файл)

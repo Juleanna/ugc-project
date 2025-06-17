@@ -9,25 +9,22 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-06-11 15:12+0300\n"
-"PO-Revision-Date: 2025-06-03 13:08+0300\n"
+"PO-Revision-Date: 2025-06-17 14:06+0300\n"
 "Last-Translator:   <juleannadafna@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != "
-"11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % "
-"100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || "
-"(n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
 "X-Translated-Using: django-rosetta 0.10.2\n"
 
 #: .\apps\contacts\admin.py:36 .\apps\content\admin.py:115
 #: .\apps\content\admin.py:200 .\apps\content\admin.py:259
-#: .\apps\jobs\admin.py:57 .\apps\jobs\admin.py:268 .\apps\partners\admin.py:42
-#: .\apps\partners\admin.py:98 .\apps\projects\admin.py:55
-#: .\apps\projects\admin.py:150 .\apps\services\admin.py:61
-#: .\apps\services\admin.py:165
+#: .\apps\jobs\admin.py:57 .\apps\jobs\admin.py:268
+#: .\apps\partners\admin.py:42 .\apps\partners\admin.py:98
+#: .\apps\projects\admin.py:55 .\apps\projects\admin.py:150
+#: .\apps\services\admin.py:61 .\apps\services\admin.py:165
 msgid "Основна інформація"
 msgstr "Основна інформація"
 
@@ -42,10 +39,10 @@ msgstr "Місцезнаходження"
 #: .\apps\contacts\admin.py:48 .\apps\content\admin.py:40
 #: .\apps\content\admin.py:77 .\apps\content\admin.py:127
 #: .\apps\content\admin.py:212 .\apps\content\admin.py:267
-#: .\apps\jobs\admin.py:73 .\apps\jobs\admin.py:276 .\apps\partners\admin.py:54
-#: .\apps\partners\admin.py:106 .\apps\projects\admin.py:63
-#: .\apps\projects\admin.py:170 .\apps\services\admin.py:73
-#: .\apps\services\admin.py:169
+#: .\apps\jobs\admin.py:73 .\apps\jobs\admin.py:276
+#: .\apps\partners\admin.py:54 .\apps\partners\admin.py:106
+#: .\apps\projects\admin.py:63 .\apps\projects\admin.py:170
+#: .\apps\services\admin.py:73 .\apps\services\admin.py:169
 msgid "Налаштування"
 msgstr "Налаштування"
 
@@ -127,9 +124,9 @@ msgid "Адреса"
 msgstr "Адреса"
 
 #: .\apps\contacts\models.py:9 .\apps\content\models.py:61
-#: .\apps\content\models.py:78 .\apps\jobs\models.py:9 .\apps\jobs\models.py:61
-#: .\apps\partners\models.py:27 .\apps\projects\models.py:10
-#: .\apps\services\models.py:33
+#: .\apps\content\models.py:78 .\apps\jobs\models.py:9
+#: .\apps\jobs\models.py:61 .\apps\partners\models.py:27
+#: .\apps\projects\models.py:10 .\apps\services\models.py:33
 msgid "Опис"
 msgstr "Опис"
 

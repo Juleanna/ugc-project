@@ -98,10 +98,10 @@ class Command(BaseCommand):
         
         try:
             # Імпортуємо моделі
-            from backend.apps.services.models import Service
-            from backend.apps.projects.models import ProjectCategory, Project
-            from backend.apps.content.models import HomePage, AboutPage
-            from backend.apps.jobs.models import JobPosition
+            from apps.services.models import Service
+            from apps.projects.models import ProjectCategory, Project
+            from apps.content.models import HomePage, AboutPage
+            from apps.jobs.models import JobPosition
             
             translations = {}
             
