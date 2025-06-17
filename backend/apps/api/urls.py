@@ -1,6 +1,16 @@
+# backend/apps/api/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
+from backend.apps.api.webhooks import TranslationWebhookView
 from . import views
+
+# Імпортуємо views для перекладів (створіть цей файл)
+from .translations_views import (
+    TranslationsAPIView, 
+    DynamicTranslationsAPIView, 
+    StaticTranslationsAPIView
+)
 
 router = DefaultRouter()
 router.register(r'homepage', views.HomePageViewSet)
@@ -18,4 +28,19 @@ router.register(r'workplace-photos', views.WorkplacePhotoViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    
+    # ==================== НОВІ ЕНДПОІНТИ ДЛЯ ПЕРЕКЛАДІВ ====================
+    
+    # Статичні переклади (JSON файли)
+    path('translations/', StaticTranslationsAPIView.as_view(), name='static-translations'),
+    path('translations/<str:locale>/', StaticTranslationsAPIView.as_view(), name='static-translations-locale'),
+    
+    # Переклади з .po файлів Django
+    path('po-translations/', TranslationsAPIView.as_view(), name='po-translations'),
+    path('po-translations/<str:locale>/', TranslationsAPIView.as_view(), name='po-translations-locale'),
+    
+    # Динамічні переклади з моделей
+    path('dynamic-translations/', DynamicTranslationsAPIView.as_view(), name='dynamic-translations'),
+    path('dynamic-translations/<str:locale>/', DynamicTranslationsAPIView.as_view(), name='dynamic-translations-locale'),
+    path('webhooks/translations/', TranslationWebhookView.as_view(), name='translation-webhook'),
 ]

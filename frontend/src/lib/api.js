@@ -1,8 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 class ApiService {
   constructor() {
-    this.baseURL = API_BASE_URL;
+    this.baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
+    this.timeout = 10000; // 10 секунд
   }
 
   // Базовий метод для запитів
@@ -10,24 +9,45 @@ class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     
     const config = {
-      ...options,
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         ...options.headers,
       },
+      ...options,
     };
 
+    // Видаляємо Content-Type для FormData
+    if (options.body instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     try {
-      const response = await fetch(url, config);
-      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+      const response = await fetch(url, {
+        ...config,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const errorData = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorData}`);
       }
-      
-      const data = await response.json();
-      return data;
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      } else {
+        return await response.text();
+      }
     } catch (error) {
-      console.error('API Request Error:', error);
+      if (error.name === 'AbortError') {
+        throw new Error('Запит перевищив час очікування');
+      }
       throw error;
     }
   }
@@ -60,7 +80,61 @@ class ApiService {
     return this.request(endpoint, { method: 'DELETE' });
   }
 
-  // Методи для конкретних endpoints
+  // ==================== ПЕРЕКЛАДИ ====================
+  
+  /**
+   * Отримання статичних перекладів з бекенду
+   * @param {string} locale - локаль (uk, en)
+   * @returns {Promise<Object>} - об'єкт з перекладами
+   */
+  async getStaticTranslations(locale = 'uk') {
+    return this.get(`/translations/${locale}/`);
+  }
+
+  /**
+   * Отримання перекладів з .po файлів
+   * @param {string} locale - локаль (uk, en) 
+   * @returns {Promise<Object>} - об'єкт з перекладами
+   */
+  async getPoTranslations(locale = 'uk') {
+    return this.get(`/po-translations/${locale}/`);
+  }
+
+  /**
+   * Отримання динамічних перекладів з моделей
+   * @param {string} locale - локаль (uk, en)
+   * @returns {Promise<Object>} - об'єкт з перекладами
+   */
+  async getDynamicTranslations(locale = 'uk') {
+    return this.get(`/dynamic-translations/${locale}/`);
+  }
+
+  /**
+   * Отримання всіх перекладів (статичні + динамічні)
+   * @param {string} locale - локаль (uk, en)
+   * @returns {Promise<Object>} - об'єднаний об'єкт з перекладами
+   */
+  async getAllTranslations(locale = 'uk') {
+    try {
+      const [staticTranslations, dynamicTranslations] = await Promise.all([
+        this.getStaticTranslations(locale).catch(() => ({ translations: {} })),
+        this.getDynamicTranslations(locale).catch(() => ({ translations: {} }))
+      ]);
+
+      return {
+        locale,
+        translations: {
+          ...staticTranslations.translations,
+          ...dynamicTranslations.translations
+        }
+      };
+    } catch (error) {
+      console.error('Помилка при отриманні перекладів:', error);
+      return { locale, translations: {} };
+    }
+  }
+
+  // ==================== ІСНУЮЧІ МЕТОДИ ====================
 
   // Головна сторінка
   async getHomePage() {

@@ -70,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'apps.api.middleware.TranslationsCacheMiddleware', 
 ]
 
 ROOT_URLCONF = 'ugc_backend.urls'
@@ -579,18 +580,25 @@ def dashboard_callback(request, context):
     return context
 
 # Кеширование Redis (добавить если еще нет)
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         },
+#         'KEY_PREFIX': 'ugc_api',
+#        'TIMEOUT': 300,  # 5 минут по умолчанию
+#     }
+# }
+
+# Або використовуйте локальний кеш для розробки:
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-        'KEY_PREFIX': 'ugc_api',
-        'TIMEOUT': 300,  # 5 минут по умолчанию
-    }
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'translations-cache',
+                  }
 }
-
 # Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
