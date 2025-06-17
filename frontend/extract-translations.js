@@ -16,7 +16,7 @@ function generateKey(text) {
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_+|_+$/g, '')
         .substring(0, 30);
-}
+}ф
 
 function extractTextsFromFile(filePath) {
     const content = fs.readFileSync(filePath, 'utf-8');

@@ -20,7 +20,10 @@ import logoPhobiaDark from '@/images/clients/phobia/logo-dark.svg'
 import logoPhobiaLight from '@/images/clients/phobia/logo-light.svg'
 import logoUnseal from '@/images/clients/unseal/logo-light.svg'
 import imageLaptop from '@/images/sewing.jpg'
-import { useTranslations } from '@/hooks/useTranslations'
+
+// Імпортуємо новий хук (оберіть один з варіантів)
+import { useTranslations } from '@/hooks/useTranslations'  // Варіант 1: Оновлений хук
+// import { useT } from '@/contexts/TranslationContext'       // Варіант 2: Context (якщо підключили Provider)
 
 const clients = [
   ['Phobia', logoPhobiaLight],
@@ -34,14 +37,34 @@ const clients = [
 ]
 
 function Clients() {
-  const { t } = useTranslations()
+  // Варіант 1: Якщо використовуєте оновлений хук
+  const { t, loading, error } = useTranslations({
+    useBackend: true,
+    fallbackToStatic: true
+  })
+  
+  // Варіант 2: Якщо використовуєте Context
+  // const { t, loading, error } = useT()
+  
+  // Показуємо індикатор завантаження
+  if (loading) {
+    return (
+      <div className="mt-24 rounded-4xl bg-neutral-950 py-20 sm:mt-32 sm:py-32 lg:mt-56">
+        <Container>
+          <div className="flex items-center justify-center">
+            <div className="text-white">{t('common.loading', 'Завантаження...')}</div>
+          </div>
+        </Container>
+      </div>
+    )
+  }
   
   return (
     <div className="mt-24 rounded-4xl bg-neutral-950 py-20 sm:mt-32 sm:py-32 lg:mt-56">
       <Container>
         <FadeIn className="flex items-center gap-x-8">
           <h2 className="text-center font-display text-sm font-semibold tracking-wider text-white sm:text-left">
-            {t('clients.title') || 'Ми працюємо з провідними компаніями України та Європи'}
+            {t('clients.title', 'Ми працюємо з провідними компаніями України та Європи')}
           </h2>
           <div className="h-px flex-auto bg-neutral-800" />
         </FadeIn>
@@ -65,44 +88,47 @@ function Clients() {
 }
 
 function CaseStudies() {
-  const { t } = useTranslations()
+  const { t, loading } = useTranslations({
+    useBackend: true,
+    fallbackToStatic: true
+  })
   
-  // Кейс-стаді з перекладами
+  // Кейс-стаді з перекладами з бекенду
   const caseStudies = [
     {
       href: '/work/phobia',
       logo: logoPhobiaLight,
       client: 'Phobia',
       date: '2023',
-      title: t('caseStudies.items.phobia.title') || 'Захисний одяг для промисловості',
-      description: t('caseStudies.items.phobia.description') || 'Розробка та виготовлення спецодягу для захисту працівників у важких умовах.'
+      title: t('caseStudies.items.phobia.title', 'Захисний одяг для промисловості'),
+      description: t('caseStudies.items.phobia.description', 'Розробка та виготовлення спецодягу для захисту працівників у важких умовах.')
     },
     {
       href: '/work/family-fund',
       logo: logoFamilyFund,
       client: 'Family Fund',
       date: '2023',
-      title: t('caseStudies.items.familyFund.title') || 'Медичний одяг',
-      description: t('caseStudies.items.familyFund.description') || 'Комфортний та функціональний медичний одяг для персоналу лікарень.'
+      title: t('caseStudies.items.familyFund.title', 'Медичний одяг'),
+      description: t('caseStudies.items.familyFund.description', 'Комфортний та функціональний медичний одяг для персоналу лікарень.')
     },
     {
       href: '/work/unseal',
       logo: logoUnseal,
       client: 'Unseal',
       date: '2022',
-      title: t('caseStudies.items.unseal.title') || 'Військова форма',
-      description: t('caseStudies.items.unseal.description') || 'Надійна та практична форма для військових підрозділів.'
+      title: t('caseStudies.items.unseal.title', 'Військова форма'),
+      description: t('caseStudies.items.unseal.description', 'Надійна та практична форма для військових підрозділів.')
     }
   ]
   
   return (
     <>
       <SectionIntro
-        title={t('caseStudies.title') || 'Надійність та якість у кожній деталі'}
+        title={t('caseStudies.title', 'Надійність та якість у кожній деталі')}
         className="mt-24 sm:mt-32 lg:mt-40"
       >
         <p>
-          {t('caseStudies.description') || 'Наш багаторічний досвід у виробництві спецодягу гарантує високу якість і надійність кожного виробу.'}
+          {t('caseStudies.description', 'Наш багаторічний досвід у виробництві спецодягу гарантує високу якість і надійність кожного виробу.')}
         </p>
       </SectionIntro>
       <Container className="mt-16">
@@ -131,7 +157,7 @@ function CaseStudies() {
                   <span className="text-neutral-300" aria-hidden="true">
                     /
                   </span>
-                  <span>{t('caseStudies.successfulProject') || 'Успішний проєкт'}</span>
+                  <span>{t('caseStudies.successfulProject', 'Успішний проєкт')}</span>
                 </p>
                 <p className="mt-6 font-display text-2xl font-semibold text-neutral-950">
                   {caseStudy.title}
@@ -149,17 +175,20 @@ function CaseStudies() {
 }
 
 function Services() {
-  const { t } = useTranslations()
+  const { t } = useTranslations({
+    useBackend: true,
+    fallbackToStatic: true
+  })
   
   return (
     <>
       <SectionIntro
-        eyebrow={t('services.eyebrow') || 'Послуги'}
-        title={t('services.title') || 'Ми створюємо якісний спецодяг під ваші потреби.'}
+        eyebrow={t('services.eyebrow', 'Послуги')}
+        title={t('services.title', 'Ми створюємо якісний спецодяг під ваші потреби.')}
         className="mt-24 sm:mt-32 lg:mt-40"
       >
         <p>
-          {t('services.description') || 'Ми виготовляємо спецодяг для різних галузей, включаючи військову форму, медичний одяг, а також спецодяг для інших сфер.'}
+          {t('services.description', 'Ми виготовляємо спецодяг для різних галузей, включаючи військову форму, медичний одяг, а також спецодяг для інших сфер.')}
         </p>
       </SectionIntro>
       <Container className="mt-16">
@@ -174,17 +203,17 @@ function Services() {
             </FadeIn>
           </div>
           <List className="mt-16 lg:mt-0 lg:w-1/2 lg:min-w-[33rem] lg:pl-4">
-            <ListItem title={t('services.technicalSpecs.title') || 'Розробка технічних умов (ТУ)'}>
-              {t('services.technicalSpecs.description') || 'Ми спеціалізуємося на створенні технічних умов згідно з вашими вимогами.'}
+            <ListItem title={t('services.technicalSpecs.title', 'Розробка технічних умов (ТУ)')}>
+              {t('services.technicalSpecs.description', 'Ми спеціалізуємося на створенні технічних умов згідно з вашими вимогами.')}
             </ListItem>
-            <ListItem title={t('services.tailoring.title') || 'Пошиття одягу'}>
-              {t('services.tailoring.description') || 'За вашими специфікаціями ми виготовляємо продукцію з використанням ваших матеріалів або наших власних.'}
+            <ListItem title={t('services.tailoring.title', 'Пошиття одягу')}>
+              {t('services.tailoring.description', 'За вашими специфікаціями ми виготовляємо продукцію з використанням ваших матеріалів або наших власних.')}
             </ListItem>
-            <ListItem title={t('services.logoApplication.title') || 'Нанесення логотипу'}>
-              {t('services.logoApplication.description') || 'Ми пропонуємо послуги нанесення логотипу або бренду на вироби.'}
+            <ListItem title={t('services.logoApplication.title', 'Нанесення логотипу')}>
+              {t('services.logoApplication.description', 'Ми пропонуємо послуги нанесення логотипу або бренду на вироби.')}
             </ListItem>
-            <ListItem title={t('services.other.title') || 'Інше'}>
-              {t('services.other.description') || 'Крім того, ми пропонуємо широкий асортимент готових виробів, тканин та фурнітури.'}
+            <ListItem title={t('services.other.title', 'Інше')}>
+              {t('services.other.description', 'Крім того, ми пропонуємо широкий асортимент готових виробів, тканин та фурнітури.')}
             </ListItem>
           </List>
         </div>
@@ -193,18 +222,48 @@ function Services() {
   )
 }
 
+// Компонент для обробки помилок завантаження перекладів
+function TranslationErrorFallback({ children, error }) {
+  if (error) {
+    console.warn('Translation error:', error)
+    // Все одно показуємо контент з fallback текстами
+  }
+  return children
+}
+
 export default function Home({ params }) {
-  const { t } = useTranslations()
+  const { t, loading, error, currentLocale } = useTranslations({
+    useBackend: true,
+    fallbackToStatic: true,
+    cacheTime: 15 * 60 * 1000 // 15 хвилин кеш
+  })
+
+  // Опціонально: показуємо повний індикатор завантаження на початку
+  if (loading && Object.keys(t.translations || {}).length === 0) {
+    return (
+      <Container className="mt-24 sm:mt-32 md:mt-56">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-950 mx-auto mb-4"></div>
+            <p className="text-neutral-600">{t('common.loading', 'Завантаження перекладів...')}</p>
+          </div>
+        </div>
+      </Container>
+    )
+  }
 
   return (
-    <>
+    <TranslationErrorFallback error={error}>
+      {/* Показуємо поточну локаль в console для debug */}
+      {process.env.NODE_ENV === 'development' && console.log('Current locale:', currentLocale)}
+      
       <Container className="mt-24 sm:mt-32 md:mt-56">
         <FadeIn className="max-w-3xl">
           <h1 className="font-display text-5xl font-medium tracking-tight text-neutral-950 [text-wrap:balance] sm:text-7xl">
-            {t('hero.title') || 'Виробник спецодягу в Україні.'}
+            {t('hero.title', 'Виробник спецодягу в Україні.')}
           </h1>
           <p className="mt-6 text-xl text-neutral-600">
-            {t('hero.description') || 'Ми створюємо якісний та надійний спецодяг, який забезпечує комфорт і безпеку в будь-яких умовах.'}
+            {t('hero.description', 'Ми створюємо якісний та надійний спецодяг, який забезпечує комфорт і безпеку в будь-яких умовах.')}
           </p>
         </FadeIn>
       </Container>
@@ -217,12 +276,12 @@ export default function Home({ params }) {
         className="mt-24 sm:mt-32 lg:mt-40"
         client={{ name: 'Phobia', logo: logoPhobiaDark }}
       >
-        {t('testimonial.quote') || 'Команда UGC перевершила наші очікування, забезпечивши високу якість спецодягу та дотримання термінів. Відмінна комунікація і професійний підхід зробили співпрацю легкою та ефективною.'}
+        {t('testimonial.quote', 'Команда UGC перевершила наші очікування, забезпечивши високу якість спецодягу та дотримання термінів. Відмінна комунікація і професійний підхід зробили співпрацю легкою та ефективною.')}
       </Testimonial>
 
       <Services />
 
       <ContactSection />
-    </>
+    </TranslationErrorFallback>
   )
-} 
+}
