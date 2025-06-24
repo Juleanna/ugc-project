@@ -1,12 +1,36 @@
-class ApiService {
+// frontend/src/lib/api.js (спрощена версія для Context)
+class SimpleApiService {
   constructor() {
     this.baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
     this.timeout = 10000; // 10 секунд
+    
+    // Simple rate limiting
+    this.lastRequestTime = 0
+    this.requestDelay = 500 // мілісекунди між запитами
+    
+    // Request deduplication для перекладів
+    this.translationRequests = new Map()
+  }
+
+  // Простий rate limiting
+  async throttleRequest() {
+    const now = Date.now()
+    const timeSinceLastRequest = now - this.lastRequestTime
+    
+    if (timeSinceLastRequest < this.requestDelay) {
+      const delay = this.requestDelay - timeSinceLastRequest
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+    
+    this.lastRequestTime = Date.now()
   }
 
   // Базовий метод для запитів
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Rate limiting
+    await this.throttleRequest()
     
     const config = {
       headers: {
@@ -17,7 +41,6 @@ class ApiService {
       ...options,
     };
 
-    // Видаляємо Content-Type для FormData
     if (options.body instanceof FormData) {
       delete config.headers['Content-Type'];
     }
@@ -34,13 +57,19 @@ class ApiService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        if (response.status === 429) {
+          console.warn('⚠️ Rate limit exceeded, waiting...')
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          throw new Error('Rate limit exceeded')
+        }
+        
         const errorData = await response.text();
         throw new Error(`HTTP ${response.status}: ${errorData}`);
       }
 
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+        return await response.json()
       } else {
         return await response.text();
       }
@@ -67,86 +96,86 @@ class ApiService {
     });
   }
 
-  // PUT запит
-  async put(endpoint, data = {}) {
-    return this.request(endpoint, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  // DELETE запит
-  async delete(endpoint) {
-    return this.request(endpoint, { method: 'DELETE' });
-  }
-
-  // ==================== ПЕРЕКЛАДИ ====================
+  // ==================== ПЕРЕКЛАДИ (оптимізовано) ====================
   
   /**
-   * Отримання статичних перекладів з бекенду
-   * @param {string} locale - локаль (uk, en)
-   * @returns {Promise<Object>} - об'єкт з перекладами
-   */
-  async getStaticTranslations(locale = 'uk') {
-    return this.get(`/translations/${locale}/`);
-  }
-
-  /**
-   * Отримання перекладів з .po файлів
-   * @param {string} locale - локаль (uk, en) 
-   * @returns {Promise<Object>} - об'єкт з перекладами
-   */
-  async getPoTranslations(locale = 'uk') {
-    return this.get(`/po-translations/${locale}/`);
-  }
-
-  /**
-   * Отримання динамічних перекладів з моделей
-   * @param {string} locale - локаль (uk, en)
-   * @returns {Promise<Object>} - об'єкт з перекладами
-   */
-  async getDynamicTranslations(locale = 'uk') {
-    return this.get(`/dynamic-translations/${locale}/`);
-  }
-
-  /**
-   * Отримання всіх перекладів (статичні + динамічні)
-   * @param {string} locale - локаль (uk, en)
-   * @returns {Promise<Object>} - об'єднаний об'єкт з перекладами
+   * Отримання всіх перекладів з дедуплікацією
    */
   async getAllTranslations(locale = 'uk') {
+    const requestKey = `translations_${locale}`
+    
+    // Перевіряємо чи вже є активний запит
+    if (this.translationRequests.has(requestKey)) {
+      console.log(`🔄 Повторне використання запиту для ${locale}`)
+      return this.translationRequests.get(requestKey)
+    }
+    
+    // Створюємо новий запит
+    const requestPromise = this.executeTranslationRequest(locale)
+    
+    // Зберігаємо в мапі
+    this.translationRequests.set(requestKey, requestPromise)
+    
+    // Видаляємо після завершення
+    requestPromise.finally(() => {
+      this.translationRequests.delete(requestKey)
+    })
+    
+    return requestPromise
+  }
+
+  async executeTranslationRequest(locale) {
     try {
-      const [staticTranslations, dynamicTranslations] = await Promise.all([
-        this.getStaticTranslations(locale).catch(() => ({ translations: {} })),
-        this.getDynamicTranslations(locale).catch(() => ({ translations: {} }))
-      ]);
+      console.log(`📡 Запит перекладів для ${locale}`)
+      
+      // Спочатку намагаємося отримати статичні переклади
+      let staticTranslations = {}
+      try {
+        const staticResponse = await this.get(`/translations/${locale}/`)
+        staticTranslations = staticResponse.translations || {}
+        console.log(`📝 Статичні переклади: ${Object.keys(staticTranslations).length}`)
+      } catch (error) {
+        console.warn(`⚠️ Помилка статичних перекладів: ${error.message}`)
+      }
+
+      // Потім динамічні (з затримкою)
+      await new Promise(resolve => setTimeout(resolve, 200))
+      let dynamicTranslations = {}
+      try {
+        const dynamicResponse = await this.get(`/dynamic-translations/${locale}/`)
+        dynamicTranslations = dynamicResponse.translations || {}
+        console.log(`🔄 Динамічні переклади: ${Object.keys(dynamicTranslations).length}`)
+      } catch (error) {
+        console.warn(`⚠️ Помилка динамічних перекладів: ${error.message}`)
+      }
+
+      const allTranslations = {
+        ...staticTranslations,
+        ...dynamicTranslations
+      }
+
+      console.log(`✅ Загалом завантажено ${Object.keys(allTranslations).length} перекладів для ${locale}`)
 
       return {
         locale,
-        translations: {
-          ...staticTranslations.translations,
-          ...dynamicTranslations.translations
-        }
+        translations: allTranslations
       };
     } catch (error) {
-      console.error('Помилка при отриманні перекладів:', error);
+      console.error(`❌ Помилка завантаження перекладів для ${locale}:`, error);
       return { locale, translations: {} };
     }
   }
 
   // ==================== ІСНУЮЧІ МЕТОДИ ====================
 
-  // Головна сторінка
   async getHomePage() {
     return this.get('/homepage/');
   }
 
-  // Про компанію
   async getAboutPage() {
     return this.get('/about/');
   }
 
-  // Послуги
   async getServices(params = {}) {
     return this.get('/services/', params);
   }
@@ -155,12 +184,10 @@ class ApiService {
     return this.get(`/services/${id}/`);
   }
 
-  // Категорії проектів
   async getProjectCategories() {
     return this.get('/project-categories/');
   }
 
-  // Проекти
   async getProjects(params = {}) {
     return this.get('/projects/', params);
   }
@@ -177,7 +204,6 @@ class ApiService {
     return this.get('/projects/by_category/', { category: categorySlug });
   }
 
-  // Вакансії
   async getJobs(params = {}) {
     return this.get('/jobs/', params);
   }
@@ -190,7 +216,6 @@ class ApiService {
     return this.get('/jobs/active/');
   }
 
-  // Подача заявки на роботу
   async submitJobApplication(data) {
     const formData = new FormData();
     
@@ -205,23 +230,18 @@ class ApiService {
     return this.request('/job-applications/', {
       method: 'POST',
       body: formData,
-      headers: {
-        // Не встановлюємо Content-Type, браузер зробить це автоматично з boundary
-      },
+      headers: {},
     });
   }
 
-  // Офіси
   async getOffices() {
     return this.get('/offices/');
   }
 
-  // Контактні запити
   async submitContactInquiry(data) {
     return this.post('/contact-inquiries/', data);
   }
 
-  // Партнерство
   async getPartnershipInfo() {
     return this.get('/partnership-info/');
   }
@@ -230,13 +250,18 @@ class ApiService {
     return this.post('/partner-inquiries/', data);
   }
 
-  // Фото робочих місць
   async getWorkplacePhotos() {
     return this.get('/workplace-photos/');
+  }
+
+  // Очистити активні запити перекладів
+  clearTranslationRequests() {
+    this.translationRequests.clear()
+    console.log('🧹 Очищено активні запити перекладів')
   }
 }
 
 // Створюємо singleton instance
-const apiService = new ApiService();
+const apiService = new SimpleApiService();
 
 export default apiService;

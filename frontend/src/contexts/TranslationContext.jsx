@@ -1,6 +1,7 @@
+// frontend/src/contexts/TranslationContext.jsx
 'use client'
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import apiService from '@/lib/api'
 
@@ -10,8 +11,8 @@ const initialState = {
   currentLocale: 'uk',
   loading: false,
   error: null,
-  cache: new Map(),
   isBackendConnected: true,
+  cache: new Map(),
 }
 
 // Типи дій
@@ -96,6 +97,7 @@ export function TranslationProvider({ children, options = {} }) {
     cacheTime = 15 * 60 * 1000, // 15 хвилин
     fallbackToStatic = true,
     enableBackend = true,
+    maxRetries = 2,
   } = options
 
   const [state, dispatch] = useReducer(translationReducer, {
@@ -104,6 +106,8 @@ export function TranslationProvider({ children, options = {} }) {
   })
   
   const pathname = usePathname()
+  let loadingTimeoutRef = React.useRef()
+  const requestInProgress = React.useRef(false)
 
   // Витягуємо локаль з URL
   useEffect(() => {
@@ -117,39 +121,74 @@ export function TranslationProvider({ children, options = {} }) {
 
   // Завантажуємо переклади при зміні локалі
   useEffect(() => {
-    loadTranslations(state.currentLocale)
+    if (state.currentLocale) {
+      loadTranslations(state.currentLocale)
+    }
   }, [state.currentLocale])
 
-  const loadTranslations = async (locale) => {
+  const loadTranslations = useCallback(async (locale) => {
+    // Запобігаємо множинним одночасним запитам
+    if (requestInProgress.current) {
+      console.log('🔄 Запит вже виконується, пропускаємо...')
+      return
+    }
+
+    // Перевіряємо кеш спочатку
+    const cacheKey = `${locale}_${enableBackend ? 'backend' : 'static'}`
+    const cached = state.cache.get(cacheKey)
+    
+    if (cached && Date.now() - cached.timestamp < cacheTime) {
+      console.log(`💾 Використовуємо кеш для ${locale}`)
+      dispatch({ type: ACTIONS.SET_TRANSLATIONS, payload: cached.data })
+      return
+    }
+
+    requestInProgress.current = true
     dispatch({ type: ACTIONS.SET_LOADING, payload: true })
     dispatch({ type: ACTIONS.CLEAR_ERROR })
 
-    try {
-      // Перевіряємо кеш
-      const cacheKey = `${locale}_${enableBackend ? 'backend' : 'static'}`
-      const cached = state.cache.get(cacheKey)
-      
-      if (cached && Date.now() - cached.timestamp < cacheTime) {
-        dispatch({ type: ACTIONS.SET_TRANSLATIONS, payload: cached.data })
-        return
+    // Додаємо timeout для loading стану
+    loadingTimeoutRef.current = setTimeout(() => {
+      if (requestInProgress.current) {
+        console.warn('⚠️ Запит занадто довгий, показуємо fallback')
+        dispatch({ type: ACTIONS.SET_LOADING, payload: false })
       }
+    }, 5000) // 5 секунд timeout
 
+    try {
       let translationsData = {}
+      let retryCount = 0
 
       if (enableBackend && state.isBackendConnected) {
-        try {
-          // Завантажуємо з бекенду
-          const backendResponse = await apiService.getAllTranslations(locale)
-          translationsData = backendResponse.translations || {}
-          
-          console.log(`✅ Завантажено ${Object.keys(translationsData).length} перекладів з бекенду`)
-          
-        } catch (backendError) {
-          console.warn('⚠️ Помилка підєднання до бекенду:', backendError.message)
-          dispatch({ type: ACTIONS.SET_BACKEND_STATUS, payload: false })
-          
-          if (fallbackToStatic) {
-            translationsData = await loadStaticTranslations(locale)
+        while (retryCount < maxRetries) {
+          try {
+            console.log(`🌐 Завантажуємо переклади з бекенду для ${locale} (спроба ${retryCount + 1})`)
+            
+            // Додаємо затримку між спробами
+            if (retryCount > 0) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * retryCount))
+            }
+            
+            const backendResponse = await apiService.getAllTranslations(locale)
+            translationsData = backendResponse.translations || {}
+            
+            console.log(`✅ Завантажено ${Object.keys(translationsData).length} перекладів з бекенду`)
+            break // Успішно завантажили, виходимо з циклу
+            
+          } catch (backendError) {
+            retryCount++
+            console.warn(`⚠️ Спроба ${retryCount} не вдалася:`, backendError.message)
+            
+            if (retryCount >= maxRetries) {
+              console.warn('❌ Всі спроби завантаження з бекенду не вдалися')
+              dispatch({ type: ACTIONS.SET_BACKEND_STATUS, payload: false })
+              
+              if (fallbackToStatic) {
+                translationsData = await loadStaticTranslations(locale)
+              } else {
+                throw new Error('Неможливо завантажити переклади з бекенду')
+              }
+            }
           }
         }
       } else {
@@ -177,15 +216,22 @@ export function TranslationProvider({ children, options = {} }) {
       
       // Останній fallback до порожнього об'єкта
       dispatch({ type: ACTIONS.SET_TRANSLATIONS, payload: {} })
+    } finally {
+      requestInProgress.current = false
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current)
+      }
+      dispatch({ type: ACTIONS.SET_LOADING, payload: false })
     }
-  }
+  }, [enableBackend, state.isBackendConnected, fallbackToStatic, cacheTime, maxRetries, state.cache])
 
   const loadStaticTranslations = async (locale) => {
     try {
+      console.log(`📁 Завантажуємо статичні переклади для ${locale}`)
       const response = await fetch(`/locales/${locale}/common.json`)
       if (response.ok) {
         const data = await response.json()
-        console.log(`📁 Завантажено ${Object.keys(data).length} статичних перекладів`)
+        console.log(`✅ Завантажено ${Object.keys(data).length} статичних перекладів`)
         return data
       } else if (locale !== 'uk') {
         // Fallback до української
@@ -204,7 +250,7 @@ export function TranslationProvider({ children, options = {} }) {
   }
 
   // Функція перекладу
-  const t = (key, fallback = null, interpolation = {}) => {
+  const t = useCallback((key, fallback = null, interpolation = {}) => {
     if (!key) return fallback || key
 
     const keys = key.split('.')
@@ -216,6 +262,10 @@ export function TranslationProvider({ children, options = {} }) {
     }
     
     if (value === undefined) {
+      // В development режимі показуємо відсутні ключі
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`🔍 Переклад не знайдено: "${key}" для локалі "${state.currentLocale}"`)
+      }
       return fallback || key
     }
 
@@ -227,22 +277,36 @@ export function TranslationProvider({ children, options = {} }) {
     }
     
     return value
-  }
+  }, [state.translations, state.currentLocale])
 
   // Додаткові функції
-  const reloadTranslations = () => {
+  const reloadTranslations = useCallback(() => {
+    console.log('🔄 Примусове перезавантаження перекладів')
     loadTranslations(state.currentLocale)
-  }
+  }, [state.currentLocale, loadTranslations])
 
-  const clearCache = () => {
+  const clearCache = useCallback(() => {
+    console.log('🗑️ Очищення кешу перекладів')
     dispatch({ type: ACTIONS.CLEAR_CACHE })
-  }
+  }, [])
 
-  const switchLocale = (newLocale) => {
+  const switchLocale = useCallback((newLocale) => {
     if (newLocale !== state.currentLocale) {
+      console.log(`🌍 Зміна локалі з ${state.currentLocale} на ${newLocale}`)
       dispatch({ type: ACTIONS.SET_LOCALE, payload: newLocale })
     }
-  }
+  }, [state.currentLocale])
+
+  const getTranslationStats = useCallback(() => {
+    return {
+      totalTranslations: Object.keys(state.translations).length,
+      currentLocale: state.currentLocale,
+      isBackendConnected: state.isBackendConnected,
+      cacheSize: state.cache.size,
+      loading: state.loading,
+      error: state.error,
+    }
+  }, [state])
 
   const value = {
     ...state,
@@ -250,7 +314,7 @@ export function TranslationProvider({ children, options = {} }) {
     reloadTranslations,
     clearCache,
     switchLocale,
-    loadTranslations,
+    getTranslationStats,
   }
 
   return (
@@ -271,6 +335,12 @@ export function useTranslationContext() {
 
 // Спрощений хук для базового використання
 export function useT() {
-  const { t, currentLocale, loading } = useTranslationContext()
-  return { t, currentLocale, loading }
+  const { t, currentLocale, loading, error } = useTranslationContext()
+  return { t, currentLocale, loading, error }
+}
+
+// Хук для отримання статистики
+export function useTranslationStats() {
+  const { getTranslationStats } = useTranslationContext()
+  return getTranslationStats()
 }

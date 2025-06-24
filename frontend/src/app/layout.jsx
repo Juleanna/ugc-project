@@ -1,5 +1,7 @@
 import '@/styles/tailwind.css'
 import { TranslationProvider } from '@/contexts/TranslationContext'
+import TranslationDebug from '@/components/TranslationDebug'
+
 
 export const metadata = {
   title: 'UGC - Українська компанія надійного одягу',
@@ -18,6 +20,7 @@ export default function RootLayout({ children }) {
         >
         {children}
         </TranslationProvider>
+        <TranslationDebug />
       </body>
     </html>
   )
