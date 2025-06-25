@@ -96,75 +96,66 @@ class SimpleApiService {
     });
   }
 
-  // ==================== ПЕРЕКЛАДИ (оптимізовано) ====================
+  // Додайте метод для отримання перекладів
+async getTranslations(locale = 'uk') {
+  const cacheKey = `translations_${locale}`;
   
-  /**
-   * Отримання всіх перекладів з дедуплікацією
-   */
-  async getAllTranslations(locale = 'uk') {
-    const requestKey = `translations_${locale}`
+  // Перевіряємо localStorage кеш
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    const { data, timestamp } = JSON.parse(cached);
+    const cacheTime = 15 * 60 * 1000; // 15 хвилин
     
-    // Перевіряємо чи вже є активний запит
-    if (this.translationRequests.has(requestKey)) {
-      console.log(`🔄 Повторне використання запиту для ${locale}`)
-      return this.translationRequests.get(requestKey)
+    if (Date.now() - timestamp < cacheTime) {
+      console.log(`📦 Використання кешованих перекладів для ${locale}`);
+      return data;
     }
-    
-    // Створюємо новий запит
-    const requestPromise = this.executeTranslationRequest(locale)
-    
-    // Зберігаємо в мапі
-    this.translationRequests.set(requestKey, requestPromise)
-    
-    // Видаляємо після завершення
-    requestPromise.finally(() => {
-      this.translationRequests.delete(requestKey)
-    })
-    
-    return requestPromise
   }
-
-  async executeTranslationRequest(locale) {
-    try {
-      console.log(`📡 Запит перекладів для ${locale}`)
-      
-      // Спочатку намагаємося отримати статичні переклади
-      let staticTranslations = {}
-      try {
-        const staticResponse = await this.get(`/translations/${locale}/`)
-        staticTranslations = staticResponse.translations || {}
-        console.log(`📝 Статичні переклади: ${Object.keys(staticTranslations).length}`)
-      } catch (error) {
-        console.warn(`⚠️ Помилка статичних перекладів: ${error.message}`)
-      }
-
-      // Потім динамічні (з затримкою)
-      await new Promise(resolve => setTimeout(resolve, 200))
-      let dynamicTranslations = {}
-      try {
-        const dynamicResponse = await this.get(`/dynamic-translations/${locale}/`)
-        dynamicTranslations = dynamicResponse.translations || {}
-        console.log(`🔄 Динамічні переклади: ${Object.keys(dynamicTranslations).length}`)
-      } catch (error) {
-        console.warn(`⚠️ Помилка динамічних перекладів: ${error.message}`)
-      }
-
-      const allTranslations = {
-        ...staticTranslations,
-        ...dynamicTranslations
-      }
-
-      console.log(`✅ Загалом завантажено ${Object.keys(allTranslations).length} перекладів для ${locale}`)
-
+  
+  try {
+    const response = await this.get(`/translations/${locale}/`);
+    
+    // Зберігаємо в localStorage
+    localStorage.setItem(cacheKey, JSON.stringify({
+      data: response,
+      timestamp: Date.now()
+    }));
+    
+    return response;
+  } catch (error) {
+    console.error('Помилка завантаження перекладів:', error);
+    
+    // Fallback до статичних файлів
+    const staticResponse = await fetch(`/locales/${locale}/common.json`);
+    if (staticResponse.ok) {
+      const staticData = await staticResponse.json();
       return {
         locale,
-        translations: allTranslations
+        translations: this.flattenObject(staticData),
+        count: Object.keys(staticData).length,
+        source: 'static'
       };
-    } catch (error) {
-      console.error(`❌ Помилка завантаження перекладів для ${locale}:`, error);
-      return { locale, translations: {} };
+    }
+    
+    throw error;
+  }
+}
+
+flattenObject(obj, prefix = '') {
+  const flattened = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    const newKey = prefix ? `${prefix}.${key}` : key;
+    
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      Object.assign(flattened, this.flattenObject(value, newKey));
+    } else {
+      flattened[newKey] = value;
     }
   }
+  
+  return flattened;
+}
 
   // ==================== ІСНУЮЧІ МЕТОДИ ====================
 

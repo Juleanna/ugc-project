@@ -10,6 +10,8 @@ import { List, ListItem } from '@/components/List'
 import { SectionIntro } from '@/components/SectionIntro'
 import { StylizedImage } from '@/components/StylizedImage'
 import { Testimonial } from '@/components/Testimonial'
+import { useTranslations } from '@/hooks/useTranslations'
+
 import logoBrightPath from '@/images/clients/bright-path/logo-light.svg'
 import logoFamilyFund from '@/images/clients/family-fund/logo-light.svg'
 import logoGreenLife from '@/images/clients/green-life/logo-light.svg'
@@ -20,10 +22,6 @@ import logoPhobiaDark from '@/images/clients/phobia/logo-dark.svg'
 import logoPhobiaLight from '@/images/clients/phobia/logo-light.svg'
 import logoUnseal from '@/images/clients/unseal/logo-light.svg'
 import imageLaptop from '@/images/sewing.jpg'
-
-// Імпортуємо новий хук (оберіть один з варіантів)
-import { useTranslations } from '@/hooks/useTranslations'  // Варіант 1: Оновлений хук
-// import { useT } from '@/contexts/TranslationContext'       // Варіант 2: Context (якщо підключили Provider)
 
 const clients = [
   ['Phobia', logoPhobiaLight],
@@ -37,16 +35,11 @@ const clients = [
 ]
 
 function Clients() {
-  // Варіант 1: Якщо використовуєте оновлений хук
-  const { t, loading, error } = useTranslations({
+  const { t, loading } = useTranslations({
     useBackend: true,
     fallbackToStatic: true
-  })
-  
-  // Варіант 2: Якщо використовуєте Context
-  // const { t, loading, error } = useT()
-  
-  // Показуємо індикатор завантаження
+  });
+
   if (loading) {
     return (
       <div className="mt-24 rounded-4xl bg-neutral-950 py-20 sm:mt-32 sm:py-32 lg:mt-56">
@@ -56,9 +49,9 @@ function Clients() {
           </div>
         </Container>
       </div>
-    )
+    );
   }
-  
+
   return (
     <div className="mt-24 rounded-4xl bg-neutral-950 py-20 sm:mt-32 sm:py-32 lg:mt-56">
       <Container>
@@ -69,14 +62,11 @@ function Clients() {
           <div className="h-px flex-auto bg-neutral-800" />
         </FadeIn>
         <FadeInStagger faster>
-          <ul
-            role="list"
-            className="mt-10 grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4"
-          >
+          <ul role="list" className="mt-10 grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-4">
             {clients.map(([client, logo]) => (
               <li key={client}>
                 <FadeIn>
-                  <Image src={logo} alt={client} unoptimized />
+                  <Image src={logo} alt={t(`clients.${client}.alt`, client)} unoptimized />
                 </FadeIn>
               </li>
             ))}
@@ -84,43 +74,42 @@ function Clients() {
         </FadeInStagger>
       </Container>
     </div>
-  )
+  );
 }
 
 function CaseStudies() {
-  const { t, loading } = useTranslations({
+  const { t } = useTranslations({
     useBackend: true,
     fallbackToStatic: true
-  })
-  
-  // Кейс-стаді з перекладами з бекенду
+  });
+
   const caseStudies = [
     {
       href: '/work/phobia',
       logo: logoPhobiaLight,
       client: 'Phobia',
       date: '2023',
-      title: t('caseStudies.items.phobia.title', 'Захисний одяг для промисловості'),
-      description: t('caseStudies.items.phobia.description', 'Розробка та виготовлення спецодягу для захисту працівників у важких умовах.')
+      title: t('caseStudies.phobia.title', 'Захисний одяг для промисловості'),
+      description: t('caseStudies.phobia.description', 'Розробка та виготовлення спецодягу для захисту працівників у важких умовах.')
     },
     {
       href: '/work/family-fund',
       logo: logoFamilyFund,
       client: 'Family Fund',
       date: '2023',
-      title: t('caseStudies.items.familyFund.title', 'Медичний одяг'),
-      description: t('caseStudies.items.familyFund.description', 'Комфортний та функціональний медичний одяг для персоналу лікарень.')
+      title: t('caseStudies.familyFund.title', 'Медичний одяг'),
+      description: t('caseStudies.familyFund.description', 'Комфортний та функціональний медичний одяг для персоналу лікарень.')
     },
     {
       href: '/work/unseal',
       logo: logoUnseal,
       client: 'Unseal',
       date: '2022',
-      title: t('caseStudies.items.unseal.title', 'Військова форма'),
-      description: t('caseStudies.items.unseal.description', 'Надійна та практична форма для військових підрозділів.')
+      title: t('caseStudies.unseal.title', 'Військова форма'),
+      description: t('caseStudies.unseal.description', 'Надійна та практична форма для військових підрозділів.')
     }
-  ]
-  
+  ];
+
   return (
     <>
       <SectionIntro
@@ -148,10 +137,7 @@ function CaseStudies() {
                   </Link>
                 </h3>
                 <p className="mt-6 flex gap-x-2 text-sm text-neutral-950">
-                  <time
-                    dateTime={caseStudy.date}
-                    className="font-semibold"
-                  >
+                  <time dateTime={caseStudy.date} className="font-semibold">
                     {caseStudy.date}
                   </time>
                   <span className="text-neutral-300" aria-hidden="true">
@@ -171,15 +157,15 @@ function CaseStudies() {
         </FadeInStagger>
       </Container>
     </>
-  )
+  );
 }
 
 function Services() {
   const { t } = useTranslations({
     useBackend: true,
     fallbackToStatic: true
-  })
-  
+  });
+
   return (
     <>
       <SectionIntro
@@ -219,26 +205,23 @@ function Services() {
         </div>
       </Container>
     </>
-  )
+  );
 }
 
-// Компонент для обробки помилок завантаження перекладів
 function TranslationErrorFallback({ children, error }) {
   if (error) {
-    console.warn('Translation error:', error)
-    // Все одно показуємо контент з fallback текстами
+    console.warn('Translation error:', error);
   }
-  return children
+  return children;
 }
 
 export default function Home({ params }) {
   const { t, loading, error, currentLocale } = useTranslations({
     useBackend: true,
     fallbackToStatic: true,
-    cacheTime: 15 * 60 * 1000 // 15 хвилин кеш
-  })
+    cacheTime: 15 * 60 * 1000
+  });
 
-  // Опціонально: показуємо повний індикатор завантаження на початку
   if (loading && Object.keys(t.translations || {}).length === 0) {
     return (
       <Container className="mt-24 sm:mt-32 md:mt-56">
@@ -249,14 +232,13 @@ export default function Home({ params }) {
           </div>
         </div>
       </Container>
-    )
+    );
   }
 
   return (
     <TranslationErrorFallback error={error}>
-      {/* Показуємо поточну локаль в console для debug */}
       {process.env.NODE_ENV === 'development' && console.log('Current locale:', currentLocale)}
-      
+
       <Container className="mt-24 sm:mt-32 md:mt-56">
         <FadeIn className="max-w-3xl">
           <h1 className="font-display text-5xl font-medium tracking-tight text-neutral-950 [text-wrap:balance] sm:text-7xl">
@@ -283,5 +265,5 @@ export default function Home({ params }) {
 
       <ContactSection />
     </TranslationErrorFallback>
-  )
+  );
 }

@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
         >
         {children}
         </TranslationProvider>
-        <TranslationDebug />
+        
       </body>
     </html>
   )

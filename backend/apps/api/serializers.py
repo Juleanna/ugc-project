@@ -397,3 +397,11 @@ class PartnerInquirySerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         return PartnerInquiry.objects.create(**validated_data)
+
+
+class TranslationSerializer(serializers.Serializer):
+    locale = serializers.CharField(max_length=5)
+    translations = serializers.DictField()
+    count = serializers.IntegerField()
+    source = serializers.CharField(required=False)
+    last_updated = serializers.DateTimeField(required=False)
