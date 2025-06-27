@@ -1,33 +1,9 @@
-// frontend/src/hooks/useTranslations.js - ПОВНИЙ РЕФАКТОРИНГ
+// frontend/src/hooks/useTranslations.js - ВИПРАВЛЕНА ВЕРСІЯ БЕЗ ГІДРАТАЦІЙНИХ ПРОБЛЕМ
 'use client'
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import apiService from '@/lib/api'
-
-// ============================= КОНФІГУРАЦІЇ =============================
-
-const CACHE_CONFIG = {
-  defaultTTL: 1000 * 60 * 15, // 15 хвилин
-  maxSize: 50,
-  storageKey: 'translations_cache_v2'
-}
-
-const RETRY_CONFIG = {
-  maxAttempts: 3,
-  baseDelay: 1000,
-  maxDelay: 5000,
-}
-
-const DEFAULT_OPTIONS = {
-  fallbackToStatic: true,
-  useBackend: true,
-  namespace: null,
-  cacheTime: CACHE_CONFIG.defaultTTL,
-  enableAnalytics: false,
-  enableLocalStorage: true,
-  debounceTime: 300,
-}
 
 // ============================= УТИЛІТИ =============================
 
@@ -43,353 +19,206 @@ const debounce = (func, wait) => {
   }
 }
 
-const retryWithBackoff = async (fn, attempts = RETRY_CONFIG.maxAttempts) => {
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await fn()
-    } catch (error) {
-      if (i === attempts - 1) throw error
-      
-      const delay = Math.min(
-        RETRY_CONFIG.baseDelay * Math.pow(2, i),
-        RETRY_CONFIG.maxDelay
-      )
-      await new Promise(resolve => setTimeout(resolve, delay))
-    }
-  }
+// Хук для перевірки клієнтського середовища
+function useIsClient() {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  return isClient
 }
 
-// ============================= КЕША МЕНЕДЖЕР =============================
+// ============================= КЕШ МЕНЕДЖЕР =============================
 
-class TranslationCacheManager {
+class TranslationsCacheManager {
   constructor() {
     this.memoryCache = new Map()
-    this.requestQueue = new Map()
-    this.activeRequests = new Set()
-    this.loadFromStorage()
+    this.maxSize = 50
+    this.defaultTTL = 1000 * 60 * 15 // 15 хвилин
   }
 
-  // Завантаження з localStorage
-  loadFromStorage() {
-    if (typeof window === 'undefined') return
-    
-    try {
-      const stored = localStorage.getItem(CACHE_CONFIG.storageKey)
-      if (stored) {
-        const parsedData = JSON.parse(stored)
-        // Перевіряємо чи не застарілі дані
-        Object.entries(parsedData).forEach(([key, value]) => {
-          if (Date.now() - value.timestamp < value.ttl) {
-            this.memoryCache.set(key, value)
-          }
-        })
-      }
-    } catch (error) {
-      console.warn('Помилка завантаження з localStorage:', error)
-    }
-  }
-
-  // Збереження в localStorage
-  saveToStorage() {
-    if (typeof window === 'undefined') return
-    
-    try {
-      const dataToStore = {}
-      this.memoryCache.forEach((value, key) => {
-        dataToStore[key] = value
-      })
-      localStorage.setItem(CACHE_CONFIG.storageKey, JSON.stringify(dataToStore))
-    } catch (error) {
-      console.warn('Помилка збереження в localStorage:', error)
-    }
-  }
-
-  get(key) {
-    const cached = this.memoryCache.get(key)
-    if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      return cached.data
-    }
-    this.memoryCache.delete(key)
-    return null
-  }
-
-  set(key, data, ttl = CACHE_CONFIG.defaultTTL) {
-    // Обмежуємо розмір кешу
-    if (this.memoryCache.size >= CACHE_CONFIG.maxSize) {
+  set(key, value, ttl = this.defaultTTL) {
+    if (this.memoryCache.size >= this.maxSize) {
       const firstKey = this.memoryCache.keys().next().value
       this.memoryCache.delete(firstKey)
     }
 
-    const cacheItem = {
-      data,
+    this.memoryCache.set(key, {
+      data: value,
       timestamp: Date.now(),
-      ttl,
-    }
+      ttl
+    })
+  }
 
-    this.memoryCache.set(key, cacheItem)
-    this.saveToStorage()
+  get(key) {
+    const cached = this.memoryCache.get(key)
+    
+    if (!cached) return null
+    
+    if (Date.now() - cached.timestamp > cached.ttl) {
+      this.memoryCache.delete(key)
+      return null
+    }
+    
+    return cached.data
+  }
+
+  delete(key) {
+    this.memoryCache.delete(key)
   }
 
   clear() {
     this.memoryCache.clear()
-    this.requestQueue.clear()
-    this.activeRequests.clear()
-    
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(CACHE_CONFIG.storageKey)
-    }
   }
 
-  // Очищення застарілих даних
-  cleanup() {
-    const now = Date.now()
-    const keysToDelete = []
-    
-    this.memoryCache.forEach((value, key) => {
-      if (now - value.timestamp >= value.ttl) {
-        keysToDelete.push(key)
-      }
-    })
-    
-    keysToDelete.forEach(key => this.memoryCache.delete(key))
-    
-    if (keysToDelete.length > 0) {
-      this.saveToStorage()
-    }
-  }
-
-  // Статистика кешу
   getStats() {
     return {
       size: this.memoryCache.size,
-      activeRequests: this.activeRequests.size,
-      queueSize: this.requestQueue.size
+      maxSize: this.maxSize,
+      keys: Array.from(this.memoryCache.keys())
     }
   }
 }
 
-// Глобальний екземпляр
-const cacheManager = new TranslationCacheManager()
+const cacheManager = new TranslationsCacheManager()
 
-// Очищення кешу кожні 5 хвилин
-if (typeof window !== 'undefined') {
-  setInterval(() => cacheManager.cleanup(), 5 * 60 * 1000)
-}
-
-// ============================= АНАЛІТИКА =============================
-
-const Analytics = {
-  track: (event, data = {}) => {
-    if (typeof window === 'undefined') return
-    
-    // Google Analytics
-    if (typeof gtag !== 'undefined') {
-      gtag('event', event, data)
-    }
-    
-    // Custom analytics можна додати тут
-    console.log(`📊 Analytics: ${event}`, data)
-  },
-
-  trackTranslationLoad: (source, locale, count) => {
-    Analytics.track('translation_loaded', {
-      source,
-      locale,
-      translations_count: count,
-      page: window.location.pathname
-    })
-  },
-
-  trackMissingTranslation: (key, locale) => {
-    Analytics.track('missing_translation', {
-      translation_key: key,
-      locale,
-      page: window.location.pathname
-    })
-  },
-
-  trackError: (error, locale) => {
-    Analytics.track('translation_error', {
-      error: error.message,
-      locale,
-      page: window.location.pathname
-    })
-  }
-}
-
-// ============================= ОСНОВНИЙ ХУК =============================
+// ============================= ГОЛОВНИЙ ХУК =============================
 
 export function useTranslations(options = {}) {
-  const config = { ...DEFAULT_OPTIONS, ...options }
   const {
-    fallbackToStatic,
-    useBackend,
-    namespace,
-    cacheTime,
-    enableAnalytics,
-    enableLocalStorage,
-    debounceTime,
-  } = config
+    fallbackToStatic = true,
+    useBackend = true,
+    namespace = null,
+    cacheTime = 1000 * 60 * 15,
+    debounceTime = 300,
+  } = options
 
+  const isClient = useIsClient()
   const pathname = usePathname()
-  const [state, setState] = useState({
-    translations: {},
-    currentLocale: 'uk',
-    loading: true,
-    error: null,
-    source: null,
-    lastUpdated: null,
-  })
-  
   const mountedRef = useRef(true)
   const loadingRef = useRef(false)
 
-  // Витягуємо локаль з pathname
+  // ============================= СТАН =============================
+
+  const [state, setState] = useState(() => ({
+    translations: {},
+    currentLocale: null,
+    loading: false,
+    error: null,
+    source: null,
+    lastUpdated: null,
+  }))
+
+  // ============================= ВИЗНАЧЕННЯ ПОТОЧНОЇ ЛОКАЛІ =============================
+
   const currentLocale = useMemo(() => {
-    const localeMatch = pathname.match(/^\/([a-z]{2})(\/|$)/)
-    return localeMatch ? localeMatch[1] : 'uk'
-  }, [pathname])
+    if (!isClient || !pathname) return 'uk' // Фолбек для SSR
+    
+    const segments = pathname.split('/').filter(Boolean)
+    const localeFromPath = segments[0]
+    
+    return ['uk', 'en'].includes(localeFromPath) ? localeFromPath : 'uk'
+  }, [pathname, isClient])
 
-  // Cleanup при unmount
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
+  // ============================= ЗАВАНТАЖЕННЯ СТАТИЧНИХ ПЕРЕКЛАДІВ =============================
 
-  // ============================= ОСНОВНІ ФУНКЦІЇ =============================
-
-  // Завантаження статичних файлів
-  const loadStaticTranslations = useCallback(async (locale, namespace) => {
+  const loadStaticTranslations = useCallback(async (locale) => {
     try {
       const fileName = namespace ? `${namespace}.json` : 'common.json'
       const response = await fetch(`/locales/${locale}/${fileName}`)
       
-      if (response.ok) {
-        const data = await response.json()
-        console.log(`📁 Статичні переклади: ${Object.keys(data).length} для ${locale}`)
-        return data
-      } else if (locale !== 'uk') {
-        // Fallback до української
-        const fallbackResponse = await fetch(`/locales/uk/${fileName}`)
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json()
-          console.log('🔄 Fallback до української мови')
-          return fallbackData
-        }
+      if (!response.ok) {
+        throw new Error(`Статичні переклади не знайдено: ${response.status}`)
       }
-      return {}
+      
+      return await response.json()
     } catch (error) {
-      console.error('Помилка завантаження статичних файлів:', error)
+      console.warn(`Не вдалося завантажити статичні переклади для ${locale}:`, error)
       return {}
     }
-  }, [])
+  }, [namespace])
 
-  // Основна функція завантаження
+  // ============================= ГОЛОВНА ФУНКЦІЯ ЗАВАНТАЖЕННЯ =============================
+
   const loadTranslations = useCallback(async (locale) => {
-    if (!mountedRef.current || loadingRef.current) return
+    if (loadingRef.current || !isClient) return state.translations
 
     const cacheKey = `${locale}_${useBackend ? 'backend' : 'static'}_${namespace || 'all'}`
     
     // Перевіряємо кеш
     const cached = cacheManager.get(cacheKey)
     if (cached) {
-      setState(prev => ({
-        ...prev,
-        translations: cached,
-        currentLocale: locale,
-        loading: false,
-        error: null,
-        source: 'cache',
-        lastUpdated: new Date().toISOString()
-      }))
+      if (mountedRef.current) {
+        setState(prev => ({
+          ...prev,
+          translations: cached,
+          currentLocale: locale,
+          source: 'cache',
+          loading: false,
+          error: null,
+          lastUpdated: new Date().toISOString()
+        }))
+      }
       return cached
     }
 
-    // Перевіряємо активні запити (deduplication)
-    if (cacheManager.activeRequests.has(cacheKey)) {
-      return new Promise((resolve) => {
-        if (!cacheManager.requestQueue.has(cacheKey)) {
-          cacheManager.requestQueue.set(cacheKey, [])
-        }
-        cacheManager.requestQueue.get(cacheKey).push(resolve)
-      })
-    }
-
-    // Позначаємо запит як активний
-    cacheManager.activeRequests.add(cacheKey)
     loadingRef.current = true
 
     if (mountedRef.current) {
-      setState(prev => ({ ...prev, loading: true, error: null }))
+      setState(prev => ({
+        ...prev,
+        loading: true,
+        error: null,
+        currentLocale: locale
+      }))
     }
 
     try {
       let translationsData = {}
-      let source = 'static'
+      let sourceType = 'static'
 
       if (useBackend) {
         try {
-          const response = await retryWithBackoff(async () => {
-            const params = new URLSearchParams()
-            if (namespace) params.append('namespace', namespace)
-            params.append('source', 'all')
-            
-            return await apiService.get(`/translations/${locale}/?${params}`)
-          })
+          const params = new URLSearchParams()
+          if (namespace) params.append('namespace', namespace)
+          params.append('source', 'all')
           
+          const response = await apiService.get(`/translations/${locale}/?${params}`)
           translationsData = response.translations || {}
-          source = response.source || 'backend'
-          
-          // Аналітика успішного завантаження
-          if (enableAnalytics) {
-            Analytics.trackTranslationLoad(source, locale, Object.keys(translationsData).length)
-          }
-          
-        } catch (error) {
-          console.warn('⚠️ Помилка бекенду, використовуємо fallback:', error.message)
+          sourceType = 'backend'
+        } catch (backendError) {
+          console.warn('Backend переклади недоступні, використовуємо статичні:', backendError)
           
           if (fallbackToStatic) {
-            translationsData = await loadStaticTranslations(locale, namespace)
-            source = 'static_fallback'
-          } else {
-            throw error
+            translationsData = await loadStaticTranslations(locale)
+            sourceType = 'static-fallback'
           }
         }
       } else {
-        translationsData = await loadStaticTranslations(locale, namespace)
+        translationsData = await loadStaticTranslations(locale)
       }
 
       // Зберігаємо в кеш
-      if (enableLocalStorage) {
-        cacheManager.set(cacheKey, translationsData, cacheTime)
-      }
+      cacheManager.set(cacheKey, translationsData, cacheTime)
 
       if (mountedRef.current) {
         setState(prev => ({
           ...prev,
           translations: translationsData,
           currentLocale: locale,
+          source: sourceType,
           loading: false,
           error: null,
-          source,
           lastUpdated: new Date().toISOString()
         }))
       }
 
-      // Сповіщаємо чергу
-      const queue = cacheManager.requestQueue.get(cacheKey) || []
-      queue.forEach(resolve => resolve(translationsData))
-      cacheManager.requestQueue.delete(cacheKey)
-
       return translationsData
 
     } catch (error) {
-      console.error('❌ Критична помилка:', error)
-      
-      if (enableAnalytics) {
-        Analytics.trackError(error, locale)
-      }
+      console.error('❌ Критична помилка завантаження перекладів:', error)
       
       if (mountedRef.current) {
         setState(prev => ({
@@ -397,29 +226,41 @@ export function useTranslations(options = {}) {
           error: error.message,
           loading: false,
           translations: {},
+          currentLocale: locale,
           lastUpdated: new Date().toISOString()
         }))
       }
 
       return {}
     } finally {
-      cacheManager.activeRequests.delete(cacheKey)
       loadingRef.current = false
     }
-  }, [useBackend, fallbackToStatic, namespace, cacheTime, enableAnalytics, enableLocalStorage, loadStaticTranslations])
+  }, [useBackend, fallbackToStatic, namespace, cacheTime, loadStaticTranslations, isClient, state.translations])
 
-  // Debounced завантаження
+  // ============================= DEBOUNCED ЗАВАНТАЖЕННЯ =============================
+
   const debouncedLoadTranslations = useMemo(
     () => debounce(loadTranslations, debounceTime),
     [loadTranslations, debounceTime]
   )
 
-  // Ефект для завантаження при зміні локалі
+  // ============================= ЕФЕКТИ =============================
+
+  // Завантаження при зміні локалі
   useEffect(() => {
-    if (currentLocale !== state.currentLocale) {
+    if (!isClient) return
+
+    if (currentLocale && currentLocale !== state.currentLocale) {
       debouncedLoadTranslations(currentLocale)
     }
-  }, [currentLocale, debouncedLoadTranslations, state.currentLocale])
+  }, [currentLocale, debouncedLoadTranslations, state.currentLocale, isClient])
+
+  // Очищення при unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   // ============================= ФУНКЦІЯ ПЕРЕКЛАДУ =============================
 
@@ -435,11 +276,6 @@ export function useTranslations(options = {}) {
     }
     
     if (value === undefined) {
-      // Аналітика відсутніх перекладів
-      if (enableAnalytics) {
-        Analytics.trackMissingTranslation(key, state.currentLocale)
-      }
-      
       return fallback || key
     }
 
@@ -452,25 +288,30 @@ export function useTranslations(options = {}) {
     }
     
     return value
-  }, [state.translations, state.currentLocale, enableAnalytics])
+  }, [state.translations])
 
   // ============================= ДОДАТКОВІ ФУНКЦІЇ =============================
 
   const reloadTranslations = useCallback((force = false) => {
+    if (!isClient) return
+    
     if (force) {
       const cacheKey = `${state.currentLocale}_${useBackend ? 'backend' : 'static'}_${namespace || 'all'}`
-      cacheManager.memoryCache.delete(cacheKey)
+      cacheManager.delete(cacheKey)
     }
     loadTranslations(state.currentLocale)
-  }, [loadTranslations, state.currentLocale, useBackend, namespace])
+  }, [loadTranslations, state.currentLocale, useBackend, namespace, isClient])
 
   const preloadLocale = useCallback(async (locale) => {
+    if (!isClient) return {}
     return await loadTranslations(locale)
-  }, [loadTranslations])
+  }, [loadTranslations, isClient])
 
   const clearCache = useCallback(() => {
     cacheManager.clear()
-    setState(prev => ({ ...prev, translations: {}, source: null }))
+    if (mountedRef.current) {
+      setState(prev => ({ ...prev, translations: {}, source: null }))
+    }
   }, [])
 
   const getCacheStats = useCallback(() => {
@@ -499,7 +340,7 @@ export function useTranslations(options = {}) {
     
     // Стан
     translations: state.translations,
-    currentLocale: state.currentLocale,
+    currentLocale: currentLocale || 'uk', // Завжди повертаємо валідну локаль
     loading: state.loading,
     error: state.error,
     source: state.source,
@@ -513,14 +354,15 @@ export function useTranslations(options = {}) {
     
     // Мета-дані
     isFromCache: state.source === 'cache',
-    isReady: !state.loading && !state.error,
+    isReady: !state.loading && !state.error && isClient,
     translationsCount: Object.keys(state.translations).length,
+    isClient, // Додаємо для умовного рендерингу
   }
 }
 
 // ============================= ЕКСПОРТ УТИЛІТАРНИХ ФУНКЦІЙ =============================
 
-export { cacheManager, Analytics }
+export { cacheManager }
 
 // Функція для попереднього завантаження
 export const preloadTranslations = async (locale, useBackend = true, namespace = null) => {

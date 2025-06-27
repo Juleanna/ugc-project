@@ -1,27 +1,24 @@
-import '@/styles/tailwind.css'
-import { TranslationProvider } from '@/contexts/TranslationContext'
-import TranslationDebug from '@/components/TranslationDebug'
+// src/app/layout.js - ПРОСТИЙ LAYOUT БЕЗ ЦИКЛІЧНИХ ЗАЛЕЖНОСТЕЙ
 
+import { TranslationProvider } from '@/contexts/TranslationContext'
+import { RootLayout } from '@/components/RootLayout'
 
 export const metadata = {
-  title: 'UGC - Українська компанія надійного одягу',
+  title: 'UGC - Виробник спецодягу',
+  description: 'Якісний спецодяг від українського виробника',
 }
 
-export default function RootLayout({ children }) {
+export default function Layout({ children }) {
   return (
-    <html lang="uk" className="h-full">
-      <body className="h-full">
-        <TranslationProvider 
-          options={{
-            enableBackend: true,
-            fallbackToStatic: true,
-            cacheTime: 15 * 60 * 1000, // 15 хвилин
-          }}
-        >
-        {children}
+    <html lang="uk">
+      <body>
+        <TranslationProvider>
+          <RootLayout>
+            {children}
+          </RootLayout>
         </TranslationProvider>
-        
       </body>
     </html>
   )
-} 
+}
+

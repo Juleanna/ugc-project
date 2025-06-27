@@ -1,0 +1,17 @@
+{
+  "menu": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "products": "Products",
+    "contact": "Contact",
+    "blog": "Blog"
+  },
+  "footer": {
+    "company": "Company",
+    "support": "Support",
+    "legal": "Legal",
+    "social": "Social Media",
+    "copyright": "© {{year}} {{company}}. All rights reserved."
+  }
+}

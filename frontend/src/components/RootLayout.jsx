@@ -1,3 +1,4 @@
+// frontend/src/components/RootLayout.jsx - ВИПРАВЛЕНА ВЕРСІЯ
 'use client'
 
 import {
@@ -35,7 +36,32 @@ const ANIMATION_CONFIG = {
 
 const FOCUS_DELAY = 150
 
-// SVG иконки вынесены отдельно для лучшей читаемости
+// ============================= ВИПРАВЛЕННЯ ГІДРАТАЦІЇ =============================
+
+// Хук для перевірки клієнтського рендерингу
+function useIsClient() {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  return isClient
+}
+
+// Обгортка для компонентів, що потребують клієнтського рендерингу
+function ClientOnly({ children, fallback = null }) {
+  const isClient = useIsClient()
+
+  if (!isClient) {
+    return fallback
+  }
+
+  return children
+}
+
+// ============================= SVG ІКОНКИ =============================
+
 const XIcon = ({ className, ...props }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className={className} {...props}>
     <path d="m5.636 4.223 14.142 14.142-1.414 1.414L4.222 5.637z" />
@@ -49,13 +75,17 @@ const MenuIcon = ({ className, ...props }) => (
   </svg>
 )
 
-// Кастомный хук для управления навигацией
+// ============================= КАСТОМНИЙ ХУК ДЛЯ НАВІГАЦІЇ =============================
+
 const useNavigationState = () => {
   const [expanded, setExpanded] = useState(false)
   const openRef = useRef(null)
   const closeRef = useRef(null)
+  const isClient = useIsClient()
 
   const toggleNavigation = useCallback(() => {
+    if (!isClient) return
+
     setExpanded(prev => {
       const newState = !prev
       // Управление фокусом с задержкой для анимации
@@ -68,11 +98,12 @@ const useNavigationState = () => {
       }, FOCUS_DELAY)
       return newState
     })
-  }, [])
+  }, [isClient])
 
   const closeNavigation = useCallback(() => {
+    if (!isClient) return
     setExpanded(false)
-  }, [])
+  }, [isClient])
 
   return {
     expanded,
@@ -80,10 +111,12 @@ const useNavigationState = () => {
     closeRef,
     toggleNavigation,
     closeNavigation,
+    isClient,
   }
 }
 
-// Улучшенный Header с мемоизацией
+// ============================= HEADER КОМПОНЕНТ =============================
+
 const Header = ({
   panelId,
   icon: Icon,
@@ -93,74 +126,138 @@ const Header = ({
   invert = false,
 }) => {
   const { logoHovered, setLogoHovered } = useContext(RootLayoutContext)
-  const { t, currentLocale } = useTranslations()
+  const { t, currentLocale, isReady } = useTranslations()
 
   const handleLogoHover = useCallback(() => setLogoHovered(true), [setLogoHovered])
   const handleLogoLeave = useCallback(() => setLogoHovered(false), [setLogoHovered])
 
   return (
-    <Container>
-      <div className="flex items-center justify-between">
+    <Container className="relative z-50 flex justify-between py-8">
+      <div className="relative z-10 flex items-center gap-16">
         <Link
-          href={`/${currentLocale}`}
-          aria-label={t('header.homeLink') || 'На головну'}
+          href={`/${currentLocale || 'uk'}`}
+          aria-label="Головна"
           onMouseEnter={handleLogoHover}
           onMouseLeave={handleLogoLeave}
-          className="transition-opacity hover:opacity-80"
+          className="transition-transform duration-200 hover:scale-105"
         >
-          <Logomark
-            className="h-8 sm:hidden"
-            invert={invert}
-            filled={logoHovered}
-          />
-          <Logo
-            className="hidden h-8 sm:block"
-            invert={invert}
-            filled={logoHovered}
-          />
-        </Link>
-        
-        <div className="flex items-center gap-x-4">
-          <LanguageSwitcher invert={invert} />
-          <Button 
-            href={`/${currentLocale}/contact`} 
-            invert={invert}
-            aria-label={t('navigation.contactUs') || 'Зв\'язатися з нами'}
+          <ClientOnly
+            fallback={<Logomark className="h-8 sm:hidden" />}
           >
-            {t('header.contact') || 'Контакти'}
-          </Button>
-          <button
-            ref={toggleRef}
-            type="button"
-            onClick={onToggle}
-            aria-expanded={expanded}
-            aria-controls={panelId}
-            aria-label={
-              expanded 
-                ? (t('header.closeNavigation') || 'Закрити навігацію')
-                : (t('header.openNavigation') || 'Відкрити навігацію')
-            }
-            className={clsx(
-              'group -m-2.5 rounded-full p-2.5 transition-colors duration-200',
-              invert ? 'hover:bg-white/10' : 'hover:bg-neutral-950/10',
-            )}
-          >
-            <Icon
-              className={clsx(
-                'h-6 w-6 transition-colors duration-200',
-                invert
-                  ? 'fill-white group-hover:fill-neutral-200'
-                  : 'fill-neutral-950 group-hover:fill-neutral-700',
-              )}
+            <Logomark className="h-8 sm:hidden" />
+            <Logo
+              className="hidden h-8 sm:block"
+              invert={invert}
+              filled={logoHovered}
             />
-          </button>
+          </ClientOnly>
+        </Link>
+
+        {/* Навігаційні посилання для десктопу */}
+        <div className="hidden lg:flex lg:gap-10">
+          <NavLinks invert={invert} />
         </div>
+      </div>
+
+      <div className="flex items-center gap-6">
+        {/* Переключення мов */}
+        <ClientOnly>
+          <LanguageSwitcher invert={invert} />
+        </ClientOnly>
+
+        {/* Кнопка меню */}
+        <button
+          ref={toggleRef}
+          type="button"
+          onClick={onToggle}
+          aria-expanded={expanded ? 'true' : 'false'}
+          aria-controls={panelId}
+          className={clsx(
+            'group -m-2.5 rounded-full p-2.5 transition-colors duration-200',
+            invert ? 'hover:bg-white/10' : 'hover:bg-neutral-950/10',
+          )}
+          aria-label={
+            expanded
+              ? (isReady ? t('header.closeNavigation') : 'Закрити навігацію')
+              : (isReady ? t('header.openNavigation') : 'Відкрити навігацію')
+          }
+        >
+          <Icon
+            className={clsx(
+              'h-6 w-6 transition-colors duration-200',
+              invert
+                ? 'fill-white group-hover:fill-neutral-200'
+                : 'fill-neutral-950 group-hover:fill-neutral-700',
+            )}
+          />
+        </button>
       </div>
     </Container>
   )
 }
 
-// Компонент строки навигации
+// ============================= НАВІГАЦІЙНІ ПОСИЛАННЯ =============================
+
+const NavLinks = ({ invert = false }) => {
+  const { t, currentLocale, isReady } = useTranslations()
+  const pathname = usePathname()
+
+  const getNavItems = () => {
+    const baseLocale = currentLocale || 'uk'
+    
+    return [
+      { 
+        href: `/${baseLocale}/about`, 
+        label: isReady ? t('nav.about') : 'Про нас' 
+      },
+      { 
+        href: `/${baseLocale}/services`, 
+        label: isReady ? t('nav.services') : 'Послуги' 
+      },
+      { 
+        href: `/${baseLocale}/projects`, 
+        label: isReady ? t('nav.projects') : 'Проекти' 
+      },
+      { 
+        href: `/${baseLocale}/contact`, 
+        label: isReady ? t('nav.contact') : 'Контакти' 
+      },
+    ]
+  }
+
+  return (
+    <>
+      {getNavItems().map(({ href, label }) => (
+        <Link
+          key={href}
+          href={href}
+          className={clsx(
+            'relative block text-base transition-colors duration-200',
+            pathname === href
+              ? (invert ? 'text-white' : 'text-neutral-950')
+              : (invert 
+                  ? 'text-neutral-300 hover:text-white' 
+                  : 'text-neutral-700 hover:text-neutral-950'
+                ),
+          )}
+        >
+          {label}
+          {pathname === href && (
+            <span
+              className={clsx(
+                'absolute -bottom-1 left-0 h-0.5 w-full',
+                invert ? 'bg-white' : 'bg-neutral-950'
+              )}
+            />
+          )}
+        </Link>
+      ))}
+    </>
+  )
+}
+
+// ============================= МОБІЛЬНА НАВІГАЦІЯ =============================
+
 const NavigationRow = ({ children }) => (
   <div className="even:mt-px sm:bg-neutral-950">
     <Container>
@@ -169,7 +266,6 @@ const NavigationRow = ({ children }) => (
   </div>
 )
 
-// Улучшенный элемент навигации
 const NavigationItem = ({ href, children, onClick }) => (
   <Link
     href={href}
@@ -183,50 +279,66 @@ const NavigationItem = ({ href, children, onClick }) => (
   </Link>
 )
 
-// Главная навигация
 const Navigation = ({ onItemClick }) => {
-  const { t, currentLocale } = useTranslations()
-  
-  // Структура навигации для лучшей масштабируемости
+  const { t, currentLocale, isReady } = useTranslations()
+  const baseLocale = currentLocale || 'uk'
+
   const navigationItems = [
-    [
-      { href: `/${currentLocale}/work`, key: 'work', label: t('navigation.work') || 'Наші вироби' },
-      { href: `/${currentLocale}/about`, key: 'about', label: t('navigation.about') || 'Про компанію' },
-    ],
-    [
-      { href: `/${currentLocale}/process`, key: 'process', label: t('navigation.process') || 'Процес виробництва' },
-      { href: `/${currentLocale}/job`, key: 'job', label: t('navigation.job') || 'Робота з нами' },
-    ],
+    { 
+      href: `/${baseLocale}`, 
+      label: isReady ? t('nav.home') : 'Головна' 
+    },
+    { 
+      href: `/${baseLocale}/about`, 
+      label: isReady ? t('nav.about') : 'Про нас' 
+    },
+    { 
+      href: `/${baseLocale}/services`, 
+      label: isReady ? t('nav.services') : 'Послуги' 
+    },
+    { 
+      href: `/${baseLocale}/projects`, 
+      label: isReady ? t('nav.projects') : 'Проекти' 
+    },
+    { 
+      href: `/${baseLocale}/jobs`, 
+      label: isReady ? t('nav.jobs') : 'Кар\'єра' 
+    },
+    { 
+      href: `/${baseLocale}/contact`, 
+      label: isReady ? t('nav.contact') : 'Контакти' 
+    },
   ]
-  
+
   return (
-    <nav 
-      className="font-display text-5xl font-medium tracking-tight text-white"
-      aria-label={t('header.mainNavigation') || 'Головна навігація'}
-    >
-      {navigationItems.map((row, rowIndex) => (
-        <NavigationRow key={rowIndex}>
-          {row.map((item) => (
+    <nav role="navigation" aria-label="Головна навігація">
+      {navigationItems.map((item, index) => (
+        <NavigationRow key={item.href}>
+          <NavigationItem href={item.href} onClick={onItemClick}>
+            {item.label}
+          </NavigationItem>
+          {index % 2 === 0 && navigationItems[index + 1] && (
             <NavigationItem 
-              key={item.key} 
-              href={item.href}
+              href={navigationItems[index + 1].href} 
               onClick={onItemClick}
             >
-              {item.label}
+              {navigationItems[index + 1].label}
             </NavigationItem>
-          ))}
+          )}
         </NavigationRow>
       ))}
     </nav>
   )
 }
 
-// Основной внутренний компонент layout
-const RootLayoutInner = ({ children }) => {
+// ============================= ГОЛОВНИЙ LAYOUT =============================
+
+function RootLayoutInner({ children }) {
+  const [logoHovered, setLogoHovered] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
+  const pathname = usePathname()
   const panelId = useId()
   const navRef = useRef(null)
-  const shouldReduceMotion = useReducedMotion()
-  const [logoHovered, setLogoHovered] = useState(false)
   
   const {
     expanded,
@@ -234,50 +346,38 @@ const RootLayoutInner = ({ children }) => {
     closeRef,
     toggleNavigation,
     closeNavigation,
+    isClient,
   } = useNavigationState()
-  
-  const { t } = useTranslations()
 
-  // Обработка клика для закрытия навигации при переходе
+  // Закриваємо навігацію при зміні маршруту
   useEffect(() => {
-    const handleClick = (event) => {
-      const target = event.target
-      if (target instanceof HTMLElement) {
-        const link = target.closest('a')
-        if (link?.href === window.location.href) {
-          closeNavigation()
-        }
-      }
+    if (expanded) {
+      closeNavigation()
+    }
+  }, [pathname, expanded, closeNavigation])
+
+  // Блокуємо прокрутку при відкритій навігації
+  useEffect(() => {
+    if (!isClient) return
+
+    if (expanded) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
     }
 
-    window.addEventListener('click', handleClick)
-    return () => window.removeEventListener('click', handleClick)
-  }, [closeNavigation])
-
-  // Закрытие навигации по Escape
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape' && expanded) {
-        closeNavigation()
-      }
+    return () => {
+      document.body.style.overflow = ''
     }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [expanded, closeNavigation])
-
-  const contextValue = {
-    logoHovered,
-    setLogoHovered,
-  }
+  }, [expanded, isClient])
 
   return (
-    <RootLayoutContext.Provider value={contextValue}>
-      <MotionConfig 
+    <RootLayoutContext.Provider value={{ logoHovered, setLogoHovered }}>
+      <MotionConfig
         transition={shouldReduceMotion ? { duration: 0 } : ANIMATION_CONFIG}
       >
         <header>
-          {/* Основной header */}
+          {/* Основний header */}
           <div
             className="absolute left-0 right-0 top-2 z-40 pt-14"
             aria-hidden={expanded || undefined}
@@ -292,53 +392,59 @@ const RootLayoutInner = ({ children }) => {
             />
           </div>
 
-          {/* Мобильная навигация */}
-          <motion.div
-            layout
-            id={panelId}
-            style={{ height: expanded ? 'auto' : '0.5rem' }}
-            className="relative z-50 overflow-hidden bg-neutral-950 pt-2"
-            aria-hidden={!expanded || undefined}
-            {...(!expanded && { inert: '' })}
-          >
-            <motion.div layout className="bg-neutral-800">
-              <div ref={navRef} className="bg-neutral-950 pb-16 pt-14">
-                <Header
-                  invert
-                  panelId={panelId}
-                  icon={XIcon}
-                  toggleRef={closeRef}
-                  expanded={expanded}
-                  onToggle={toggleNavigation}
-                />
-              </div>
-              
-              <Navigation onItemClick={closeNavigation} />
-              
-              {/* Дополнительная информация в навигации */}
-              <div className="relative bg-neutral-950 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-neutral-800">
-                <Container>
-                  <div className="grid grid-cols-1 gap-y-10 pb-16 pt-10 sm:grid-cols-2 sm:pt-16">
-                    <div>
-                      <h2 className="font-display text-base font-semibold text-white">
-                        {t('header.ourAddress') || 'Наша адреса'}
-                      </h2>
-                      <Offices
-                        invert
-                        className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2"
-                      />
+          {/* Мобільна навігація */}
+          <ClientOnly>
+            <motion.div
+              layout
+              id={panelId}
+              style={{ height: expanded ? 'auto' : '0.5rem' }}
+              className="relative z-50 overflow-hidden bg-neutral-950 pt-2"
+              aria-hidden={!expanded || undefined}
+              {...(!expanded && { inert: '' })}
+            >
+              <motion.div layout className="bg-neutral-800">
+                <div ref={navRef} className="bg-neutral-950 pb-16 pt-14">
+                  <Header
+                    invert
+                    panelId={panelId}
+                    icon={XIcon}
+                    toggleRef={closeRef}
+                    expanded={expanded}
+                    onToggle={toggleNavigation}
+                  />
+                </div>
+                
+                <Navigation onItemClick={closeNavigation} />
+                
+                {/* Дополнительная информация в навигации */}
+                <div className="relative bg-neutral-950 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-neutral-800">
+                  <Container>
+                    <div className="grid grid-cols-1 gap-y-10 pb-16 pt-10 sm:grid-cols-2 sm:pt-16">
+                      <div>
+                        <ClientOnly>
+                          <h2 className="font-display text-base font-semibold text-white">
+                            Наша адреса
+                          </h2>
+                          <Offices
+                            invert
+                            className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2"
+                          />
+                        </ClientOnly>
+                      </div>
+                      <div className="sm:border-l sm:border-neutral-800 sm:pl-16">
+                        <ClientOnly>
+                          <h2 className="font-display text-base font-semibold text-white">
+                            Слідкуйте за нами
+                          </h2>
+                          <SocialMedia className="mt-6" invert />
+                        </ClientOnly>
+                      </div>
                     </div>
-                    <div className="sm:border-l sm:border-neutral-800 sm:pl-16">
-                      <h2 className="font-display text-base font-semibold text-white">
-                        {t('header.followUs') || 'Слідкуйте за нами'}
-                      </h2>
-                      <SocialMedia className="mt-6" invert />
-                    </div>
-                  </div>
-                </Container>
-              </div>
+                  </Container>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </ClientOnly>
         </header>
 
         {/* Основной контент */}
@@ -361,7 +467,9 @@ const RootLayoutInner = ({ children }) => {
               {children}
             </main>
 
-            <Footer />
+            <ClientOnly>
+              <Footer />
+            </ClientOnly>
           </motion.div>
         </motion.div>
       </MotionConfig>
@@ -369,7 +477,7 @@ const RootLayoutInner = ({ children }) => {
   )
 }
 
-// Главный экспорт
+// Головний експорт
 export function RootLayout({ children }) {
   const pathname = usePathname()
 

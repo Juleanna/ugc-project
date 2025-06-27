@@ -1,0 +1,9 @@
+{
+  "homepage": {
+    "hero": {
+      "title": "Welcome to {{company}}",
+      "subtitle": "We provide the best services",
+      "cta_button": "Get Started"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "validation": {
+    "required": "This field is required",
+    "email": "Enter valid email",
+    "min_length": "Minimum {{count}} characters",
+    "password_mismatch": "Passwords don't match"
+  },
+  "buttons": {
+    "submit": "Submit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "reset": "Reset"
+  }
+}

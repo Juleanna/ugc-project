@@ -1,3 +1,4 @@
+// src/app/[locale]/page.jsx - ФІНАЛЬНА ВЕРСІЯ БЕЗ SSR ПРОБЛЕМ
 'use client'
 
 import Image from 'next/image'
@@ -10,7 +11,11 @@ import { List, ListItem } from '@/components/List'
 import { SectionIntro } from '@/components/SectionIntro'
 import { StylizedImage } from '@/components/StylizedImage'
 import { Testimonial } from '@/components/Testimonial'
+
+// Імпорти для перекладів
 import { useTranslations } from '@/hooks/useTranslations'
+import { TranslatedText } from '@/contexts/TranslationContext'
+import { NoSSR } from '@/components/NoSSR'
 
 import logoBrightPath from '@/images/clients/bright-path/logo-light.svg'
 import logoFamilyFund from '@/images/clients/family-fund/logo-light.svg'
@@ -34,30 +39,70 @@ const clients = [
   ['North Adventures', logoNorthAdventures],
 ]
 
-function Clients() {
-  const { t, loading } = useTranslations({
-    useBackend: true,
-    fallbackToStatic: true
-  });
-
-  if (loading) {
-    return (
-      <div className="mt-24 rounded-4xl bg-neutral-950 py-20 sm:mt-32 sm:py-32 lg:mt-56">
-        <Container>
-          <div className="flex items-center justify-center">
-            <div className="text-white">{t('common.loading', 'Завантаження...')}</div>
-          </div>
-        </Container>
-      </div>
-    );
+// Статичні тексти як fallback
+const STATIC_TEXTS = {
+  hero: {
+    title: 'Виробник спецодягу в Україні.',
+    description: 'Ми створюємо якісний та надійний спецодяг, який забезпечує комфорт і безпеку в будь-яких умовах.'
+  },
+  clients: {
+    title: 'Ми працюємо з провідними компаніями України та Європи'
+  },
+  caseStudies: {
+    title: 'Надійність та якість у кожній деталі',
+    description: 'Наш багаторічний досвід у виробництві спецодягу гарантує високу якість і надійність кожного виробу.',
+    successfulProject: 'Успішний проєкт',
+    phobia: {
+      title: 'Захисний одяг для промисловості',
+      description: 'Розробка та виготовлення спецодягу для захисту працівників у важких умовах.'
+    },
+    familyFund: {
+      title: 'Медичний одяг',
+      description: 'Комфортний та функціональний медичний одяг для персоналу лікарень.'
+    },
+    unseal: {
+      title: 'Військова форма',
+      description: 'Надійна та практична форма для військових підрозділів.'
+    }
+  },
+  services: {
+    eyebrow: 'Послуги',
+    title: 'Ми створюємо якісний спецодяг під ваші потреби.',
+    description: 'Ми виготовляємо спецодяг для різних галузей, включаючи військову форму, медичний одяг, а також спецодяг для інших сфер.',
+    technicalSpecs: {
+      title: 'Розробка технічних умов (ТУ)',
+      description: 'Ми спеціалізуємося на створенні технічних умов згідно з вашими вимогами.'
+    },
+    tailoring: {
+      title: 'Пошиття одягу',
+      description: 'За вашими специфікаціями ми виготовляємо продукцію з використанням ваших матеріалів або наших власних.'
+    },
+    logoApplication: {
+      title: 'Нанесення логотипу',
+      description: 'Ми пропонуємо послуги нанесення логотипу або бренду на вироби.'
+    },
+    other: {
+      title: 'Інше',
+      description: 'Крім того, ми пропонуємо широкий асортимент готових виробів, тканин та фурнітури.'
+    }
+  },
+  testimonial: {
+    quote: 'Команда UGC перевершила наші очікування, забезпечивши високу якість спецодягу та дотримання термінів. Відмінна комунікація і професійний підхід зробили співпрацю легкою та ефективною.'
   }
+}
 
+function Clients() {
   return (
     <div className="mt-24 rounded-4xl bg-neutral-950 py-20 sm:mt-32 sm:py-32 lg:mt-56">
       <Container>
         <FadeIn className="flex items-center gap-x-8">
           <h2 className="text-center font-display text-sm font-semibold tracking-wider text-white sm:text-left">
-            {t('clients.title', 'Ми працюємо з провідними компаніями України та Європи')}
+            <NoSSR fallback={STATIC_TEXTS.clients.title}>
+              <TranslatedText 
+                tKey="homepage.clients.title"
+                fallback={STATIC_TEXTS.clients.title}
+              />
+            </NoSSR>
           </h2>
           <div className="h-px flex-auto bg-neutral-800" />
         </FadeIn>
@@ -66,7 +111,11 @@ function Clients() {
             {clients.map(([client, logo]) => (
               <li key={client}>
                 <FadeIn>
-                  <Image src={logo} alt={t(`clients.${client}.alt`, client)} unoptimized />
+                  <Image 
+                    src={logo} 
+                    alt={client} 
+                    unoptimized 
+                  />
                 </FadeIn>
               </li>
             ))}
@@ -74,51 +123,62 @@ function Clients() {
         </FadeInStagger>
       </Container>
     </div>
-  );
+  )
 }
 
 function CaseStudies() {
-  const { t } = useTranslations({
-    useBackend: true,
-    fallbackToStatic: true
-  });
-
   const caseStudies = [
     {
       href: '/work/phobia',
       logo: logoPhobiaLight,
       client: 'Phobia',
       date: '2023',
-      title: t('caseStudies.phobia.title', 'Захисний одяг для промисловості'),
-      description: t('caseStudies.phobia.description', 'Розробка та виготовлення спецодягу для захисту працівників у важких умовах.')
+      title: STATIC_TEXTS.caseStudies.phobia.title,
+      description: STATIC_TEXTS.caseStudies.phobia.description,
+      titleKey: 'homepage.caseStudies.phobia.title',
+      descriptionKey: 'homepage.caseStudies.phobia.description'
     },
     {
       href: '/work/family-fund',
       logo: logoFamilyFund,
       client: 'Family Fund',
       date: '2023',
-      title: t('caseStudies.familyFund.title', 'Медичний одяг'),
-      description: t('caseStudies.familyFund.description', 'Комфортний та функціональний медичний одяг для персоналу лікарень.')
+      title: STATIC_TEXTS.caseStudies.familyFund.title,
+      description: STATIC_TEXTS.caseStudies.familyFund.description,
+      titleKey: 'homepage.caseStudies.family_fund.title',
+      descriptionKey: 'homepage.caseStudies.family_fund.description'
     },
     {
       href: '/work/unseal',
       logo: logoUnseal,
       client: 'Unseal',
       date: '2022',
-      title: t('caseStudies.unseal.title', 'Військова форма'),
-      description: t('caseStudies.unseal.description', 'Надійна та практична форма для військових підрозділів.')
+      title: STATIC_TEXTS.caseStudies.unseal.title,
+      description: STATIC_TEXTS.caseStudies.unseal.description,
+      titleKey: 'homepage.caseStudies.unseal.title',
+      descriptionKey: 'homepage.caseStudies.unseal.description'
     }
-  ];
+  ]
 
   return (
     <>
       <SectionIntro
-        title={t('caseStudies.title', 'Надійність та якість у кожній деталі')}
+        title={
+          <NoSSR fallback={STATIC_TEXTS.caseStudies.title}>
+            <TranslatedText 
+              tKey="homepage.caseStudies.title"
+              fallback={STATIC_TEXTS.caseStudies.title}
+            />
+          </NoSSR>
+        }
         className="mt-24 sm:mt-32 lg:mt-40"
       >
-        <p>
-          {t('caseStudies.description', 'Наш багаторічний досвід у виробництві спецодягу гарантує високу якість і надійність кожного виробу.')}
-        </p>
+        <NoSSR fallback={STATIC_TEXTS.caseStudies.description}>
+          <TranslatedText 
+            tKey="homepage.caseStudies.description"
+            fallback={STATIC_TEXTS.caseStudies.description}
+          />
+        </NoSSR>
       </SectionIntro>
       <Container className="mt-16">
         <FadeInStagger className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -143,13 +203,30 @@ function CaseStudies() {
                   <span className="text-neutral-300" aria-hidden="true">
                     /
                   </span>
-                  <span>{t('caseStudies.successfulProject', 'Успішний проєкт')}</span>
+                  <span>
+                    <NoSSR fallback={STATIC_TEXTS.caseStudies.successfulProject}>
+                      <TranslatedText 
+                        tKey="homepage.caseStudies.successful_project"
+                        fallback={STATIC_TEXTS.caseStudies.successfulProject}
+                      />
+                    </NoSSR>
+                  </span>
                 </p>
                 <p className="mt-6 font-display text-2xl font-semibold text-neutral-950">
-                  {caseStudy.title}
+                  <NoSSR fallback={caseStudy.title}>
+                    <TranslatedText 
+                      tKey={caseStudy.titleKey}
+                      fallback={caseStudy.title}
+                    />
+                  </NoSSR>
                 </p>
                 <p className="mt-4 text-base text-neutral-600">
-                  {caseStudy.description}
+                  <NoSSR fallback={caseStudy.description}>
+                    <TranslatedText 
+                      tKey={caseStudy.descriptionKey}
+                      fallback={caseStudy.description}
+                    />
+                  </NoSSR>
                 </p>
               </article>
             </FadeIn>
@@ -157,25 +234,37 @@ function CaseStudies() {
         </FadeInStagger>
       </Container>
     </>
-  );
+  )
 }
 
 function Services() {
-  const { t } = useTranslations({
-    useBackend: true,
-    fallbackToStatic: true
-  });
-
   return (
     <>
       <SectionIntro
-        eyebrow={t('services.eyebrow', 'Послуги')}
-        title={t('services.title', 'Ми створюємо якісний спецодяг під ваші потреби.')}
+        eyebrow={
+          <NoSSR fallback={STATIC_TEXTS.services.eyebrow}>
+            <TranslatedText 
+              tKey="homepage.services.eyebrow"
+              fallback={STATIC_TEXTS.services.eyebrow}
+            />
+          </NoSSR>
+        }
+        title={
+          <NoSSR fallback={STATIC_TEXTS.services.title}>
+            <TranslatedText 
+              tKey="homepage.services.title"
+              fallback={STATIC_TEXTS.services.title}
+            />
+          </NoSSR>
+        }
         className="mt-24 sm:mt-32 lg:mt-40"
       >
-        <p>
-          {t('services.description', 'Ми виготовляємо спецодяг для різних галузей, включаючи військову форму, медичний одяг, а також спецодяг для інших сфер.')}
-        </p>
+        <NoSSR fallback={STATIC_TEXTS.services.description}>
+          <TranslatedText 
+            tKey="homepage.services.description"
+            fallback={STATIC_TEXTS.services.description}
+          />
+        </NoSSR>
       </SectionIntro>
       <Container className="mt-16">
         <div className="lg:flex lg:items-center lg:justify-end">
@@ -189,81 +278,114 @@ function Services() {
             </FadeIn>
           </div>
           <List className="mt-16 lg:mt-0 lg:w-1/2 lg:min-w-[33rem] lg:pl-4">
-            <ListItem title={t('services.technicalSpecs.title', 'Розробка технічних умов (ТУ)')}>
-              {t('services.technicalSpecs.description', 'Ми спеціалізуємося на створенні технічних умов згідно з вашими вимогами.')}
+            <ListItem title={
+              <NoSSR fallback={STATIC_TEXTS.services.technicalSpecs.title}>
+                <TranslatedText 
+                  tKey="homepage.services.technical_specs.title"
+                  fallback={STATIC_TEXTS.services.technicalSpecs.title}
+                />
+              </NoSSR>
+            }>
+              <NoSSR fallback={STATIC_TEXTS.services.technicalSpecs.description}>
+                <TranslatedText 
+                  tKey="homepage.services.technical_specs.description"
+                  fallback={STATIC_TEXTS.services.technicalSpecs.description}
+                />
+              </NoSSR>
             </ListItem>
-            <ListItem title={t('services.tailoring.title', 'Пошиття одягу')}>
-              {t('services.tailoring.description', 'За вашими специфікаціями ми виготовляємо продукцію з використанням ваших матеріалів або наших власних.')}
+            <ListItem title={
+              <NoSSR fallback={STATIC_TEXTS.services.tailoring.title}>
+                <TranslatedText 
+                  tKey="homepage.services.tailoring.title"
+                  fallback={STATIC_TEXTS.services.tailoring.title}
+                />
+              </NoSSR>
+            }>
+              <NoSSR fallback={STATIC_TEXTS.services.tailoring.description}>
+                <TranslatedText 
+                  tKey="homepage.services.tailoring.description"
+                  fallback={STATIC_TEXTS.services.tailoring.description}
+                />
+              </NoSSR>
             </ListItem>
-            <ListItem title={t('services.logoApplication.title', 'Нанесення логотипу')}>
-              {t('services.logoApplication.description', 'Ми пропонуємо послуги нанесення логотипу або бренду на вироби.')}
+            <ListItem title={
+              <NoSSR fallback={STATIC_TEXTS.services.logoApplication.title}>
+                <TranslatedText 
+                  tKey="homepage.services.logo_application.title"
+                  fallback={STATIC_TEXTS.services.logoApplication.title}
+                />
+              </NoSSR>
+            }>
+              <NoSSR fallback={STATIC_TEXTS.services.logoApplication.description}>
+                <TranslatedText 
+                  tKey="homepage.services.logo_application.description"
+                  fallback={STATIC_TEXTS.services.logoApplication.description}
+                />
+              </NoSSR>
             </ListItem>
-            <ListItem title={t('services.other.title', 'Інше')}>
-              {t('services.other.description', 'Крім того, ми пропонуємо широкий асортимент готових виробів, тканин та фурнітури.')}
+            <ListItem title={
+              <NoSSR fallback={STATIC_TEXTS.services.other.title}>
+                <TranslatedText 
+                  tKey="homepage.services.other.title"
+                  fallback={STATIC_TEXTS.services.other.title}
+                />
+              </NoSSR>
+            }>
+              <NoSSR fallback={STATIC_TEXTS.services.other.description}>
+                <TranslatedText 
+                  tKey="homepage.services.other.description"
+                  fallback={STATIC_TEXTS.services.other.description}
+                />
+              </NoSSR>
             </ListItem>
           </List>
         </div>
       </Container>
     </>
-  );
-}
-
-function TranslationErrorFallback({ children, error }) {
-  if (error) {
-    console.warn('Translation error:', error);
-  }
-  return children;
+  )
 }
 
 export default function Home({ params }) {
-  const { t, loading, error, currentLocale } = useTranslations({
-    useBackend: true,
-    fallbackToStatic: true,
-    cacheTime: 15 * 60 * 1000
-  });
-
-  if (loading && Object.keys(t.translations || {}).length === 0) {
-    return (
-      <Container className="mt-24 sm:mt-32 md:mt-56">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-950 mx-auto mb-4"></div>
-            <p className="text-neutral-600">{t('common.loading', 'Завантаження перекладів...')}</p>
-          </div>
-        </div>
-      </Container>
-    );
-  }
-
   return (
-    <TranslationErrorFallback error={error}>
-      {process.env.NODE_ENV === 'development' && console.log('Current locale:', currentLocale)}
-
+    <>
       <Container className="mt-24 sm:mt-32 md:mt-56">
         <FadeIn className="max-w-3xl">
           <h1 className="font-display text-5xl font-medium tracking-tight text-neutral-950 [text-wrap:balance] sm:text-7xl">
-            {t('hero.title', 'Виробник спецодягу в Україні.')}
+            <NoSSR fallback={STATIC_TEXTS.hero.title}>
+              <TranslatedText 
+                tKey="homepage.hero.title"
+                fallback={STATIC_TEXTS.hero.title}
+              />
+            </NoSSR>
           </h1>
           <p className="mt-6 text-xl text-neutral-600">
-            {t('hero.description', 'Ми створюємо якісний та надійний спецодяг, який забезпечує комфорт і безпеку в будь-яких умовах.')}
+            <NoSSR fallback={STATIC_TEXTS.hero.description}>
+              <TranslatedText 
+                tKey="homepage.hero.description"
+                fallback={STATIC_TEXTS.hero.description}
+              />
+            </NoSSR>
           </p>
         </FadeIn>
       </Container>
 
       <Clients />
-
       <CaseStudies />
-
+      
       <Testimonial
         className="mt-24 sm:mt-32 lg:mt-40"
         client={{ name: 'Phobia', logo: logoPhobiaDark }}
       >
-        {t('testimonial.quote', 'Команда UGC перевершила наші очікування, забезпечивши високу якість спецодягу та дотримання термінів. Відмінна комунікація і професійний підхід зробили співпрацю легкою та ефективною.')}
+        <NoSSR fallback={STATIC_TEXTS.testimonial.quote}>
+          <TranslatedText 
+            tKey="homepage.testimonial.quote"
+            fallback={STATIC_TEXTS.testimonial.quote}
+          />
+        </NoSSR>
       </Testimonial>
 
       <Services />
-
       <ContactSection />
-    </TranslationErrorFallback>
-  );
+    </>
+  )
 }

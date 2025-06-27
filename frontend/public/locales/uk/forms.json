@@ -1,0 +1,14 @@
+{
+  "validation": {
+    "required": "Це поле обов'язкове",
+    "email": "Введіть коректний email",
+    "min_length": "Мінімум {{count}} символів",
+    "password_mismatch": "Паролі не співпадають"
+  },
+  "buttons": {
+    "submit": "Відправити",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "reset": "Скинути"
+  }
+}

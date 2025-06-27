@@ -1,0 +1,15 @@
+{
+  "http": {
+    "403": "Access denied",
+    "404": "Page not found",
+    "500": "Server error"
+  },
+  "network": {
+    "offline": "No internet connection",
+    "timeout": "Request timeout"
+  },
+  "generic": {
+    "something_went_wrong": "Something went wrong",
+    "try_again": "Try again"
+  }
+}
