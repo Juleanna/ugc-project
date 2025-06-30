@@ -1,4 +1,4 @@
-// frontend/src/hooks/useTranslations.js - ПОВНИЙ КОД
+// frontend/src/hooks/useTranslations.js - ПОВНИЙ КОД З NAMESPACE
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import apiService from '../lib/api';
 
@@ -93,26 +93,61 @@ async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
 }
 
 /**
+ * Завантаження статичних перекладів з namespace
+ */
+async function loadNamespaceTranslations(locale, namespace) {
+  try {
+    // Спочатку пробуємо завантажити конкретний файл namespace
+    const namespaceResponse = await fetch(`/locales/${locale}/${namespace}.json`);
+    if (namespaceResponse.ok) {
+      const namespaceData = await namespaceResponse.json();
+      console.log(`✅ Завантажено namespace ${namespace} для ${locale}:`, Object.keys(namespaceData).length, 'ключів');
+      return namespaceData;
+    }
+  } catch (error) {
+    console.warn(`⚠️ Не вдалося завантажити namespace ${namespace} для ${locale}:`, error.message);
+  }
+
+  // Fallback до загальних перекладів
+  try {
+    const commonResponse = await fetch(`/locales/${locale}/common.json`);
+    if (commonResponse.ok) {
+      const commonData = await commonResponse.json();
+      
+      // Фільтруємо тільки ключі що відносяться до namespace
+      if (namespace) {
+        const filtered = {};
+        for (const [key, value] of Object.entries(commonData)) {
+          if (key.startsWith(`${namespace}.`)) {
+            filtered[key] = value;
+          }
+        }
+        return filtered;
+      }
+      return commonData;
+    }
+  } catch (error) {
+    console.warn(`⚠️ Не вдалося завантажити common переклади для ${locale}:`, error.message);
+  }
+
+  return {};
+}
+
+/**
  * Завантаження статичних перекладів як fallback
  */
 async function loadStaticTranslations(locale, namespace) {
+  // Якщо є namespace, завантажуємо спеціалізовані переклади
+  if (namespace) {
+    return await loadNamespaceTranslations(locale, namespace);
+  }
+
+  // Інакше завантажуємо загальні переклади
   try {
     const response = await fetch(`/locales/${locale}/common.json`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
     const data = await response.json();
-    
-    // Фільтруємо за namespace якщо потрібно
-    if (namespace) {
-      const filtered = {};
-      for (const [key, value] of Object.entries(data)) {
-        if (key.startsWith(`${namespace}.`)) {
-          filtered[key] = value;
-        }
-      }
-      return filtered;
-    }
-    
     return data;
   } catch (error) {
     console.warn(`⚠️ Не вдалося завантажити статичні переклади для ${locale}:`, error.message);
@@ -477,6 +512,36 @@ export function useTranslations(options = {}) {
   };
 }
 
+// ==================== ХУК ДЛЯ NAMESPACE ====================
+
+/**
+ * Хук для роботи з перекладами з підтримкою namespace
+ * Використовується для завантаження перекладів з конкретних файлів
+ */
+export function usePageTranslations(namespace = null, options = {}) {
+  const translationsApi = useTranslations({
+    namespace,
+    ...options
+  });
+
+  // Функція для отримання перекладу з namespace
+  const t = useCallback((key, defaultValue = key, interpolations = {}) => {
+    // Якщо є namespace і ключ не містить його, додаємо автоматично
+    let fullKey = key;
+    if (namespace && !key.includes('.') && !key.startsWith(namespace)) {
+      fullKey = `${namespace}.${key}`;
+    }
+    
+    return translationsApi.t(fullKey, defaultValue, interpolations);
+  }, [translationsApi.t, namespace]);
+
+  return {
+    ...translationsApi,
+    t,
+    namespace
+  };
+}
+
 // ==================== КОНТЕКСТ ДЛЯ ПЕРЕКЛАДІВ ====================
 
 const TranslationsContext = createContext(null);
@@ -530,6 +595,30 @@ export function withTranslations(WrappedComponent, options = {}) {
   return TranslatedComponent;
 }
 
+/**
+ * HOC для автоматичного застосування namespace
+ */
+export function withPageTranslations(namespace) {
+  return function(WrappedComponent) {
+    const TranslatedPageComponent = function(props) {
+      const translationsApi = usePageTranslations(namespace);
+      
+      return (
+        <WrappedComponent 
+          {...props} 
+          translations={translationsApi}
+          t={translationsApi.t}
+          locale={translationsApi.locale}
+        />
+      );
+    };
+    
+    TranslatedPageComponent.displayName = `withPageTranslations(${namespace})(${WrappedComponent.displayName || WrappedComponent.name})`;
+    
+    return TranslatedPageComponent;
+  };
+}
+
 // ==================== УТИЛІТАРНІ ФУНКЦІЇ ====================
 
 /**
@@ -581,6 +670,18 @@ export function getTranslationsStats() {
   const stats = cacheManager.getStats();
   console.log('📊 Статистика перекладів:', stats);
   return stats;
+}
+
+/**
+ * Функція для отримання статичних перекладів (для SSR)
+ */
+export async function getStaticTranslations(locale, namespace = null) {
+  try {
+    return await loadStaticTranslations(locale, namespace);
+  } catch (error) {
+    console.error(`❌ Помилка завантаження статичних перекладів:`, error.message);
+    return getBasicFallbackTranslations(locale);
+  }
 }
 
 /**

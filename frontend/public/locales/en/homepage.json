@@ -1,0 +1,86 @@
+{
+  "_comment": "frontend/public/locales/en/homepage.json - TRANSLATIONS FOR HOMEPAGE",
+  "hero": {
+    "title": "Workwear Manufacturer in Ukraine.",
+    "subtitle": "Quality, Reliability, Safety",
+    "description": "We create high-quality and reliable workwear that ensures comfort and safety in any conditions.",
+    "cta": "Learn More",
+    "ctaSecondary": "Product Catalog",
+    "watchVideo": "Watch Video",
+    "learnMore": "Learn More"
+  },
+  "clients": {
+    "title": "Trusted by Industry Leaders",
+    "subtitle": "Leading Ukrainian companies choose us"
+  },
+  "caseStudies": {
+    "title": "Our Projects",
+    "description": "We are proud of our projects and the results we achieve together with our clients.",
+    "readMore": "Read Case Study",
+    "familyFund": {
+      "title": "Next Generation Medical Wear",
+      "description": "Developed innovative medical clothing with antibacterial properties",
+      "service": "Medical Clothing"
+    },
+    "unseal": {
+      "title": "Protective Clothing for Heavy Industry",
+      "description": "Created protective clothing for working in extreme conditions",
+      "service": "Protective Clothing"
+    },
+    "phobia": {
+      "title": "Corporate Clothing for HoReCa",
+      "description": "Developed stylish and functional clothing for the restaurant industry",
+      "service": "Corporate Clothing"
+    }
+  },
+  "services": {
+    "eyebrow": "Our Services",
+    "title": "We help you look professional",
+    "description": "Our services cover the full cycle of workwear production - from design development to sewing and delivery.",
+    "medical": {
+      "title": "Medical Clothing",
+      "description": "Modern medical clothing with antibacterial properties"
+    },
+    "protective": {
+      "title": "Protective Clothing",
+      "description": "Reliable protection for working in harsh conditions"
+    },
+    "corporate": {
+      "title": "Corporate Clothing",
+      "description": "Stylish and professional clothing for your business"
+    },
+    "horeca": {
+      "title": "HoReCa Clothing",
+      "description": "Functional clothing for the restaurant industry"
+    }
+  },
+  "process": {
+    "eyebrow": "Our Process",
+    "title": "How We Work",
+    "description": "Our clearly structured process guarantees high quality of the final product and complete customer satisfaction.",
+    "learnMore": "Learn More About Process",
+    "consultation": {
+      "title": "Consultation",
+      "description": "We discuss your needs and requirements for workwear"
+    },
+    "design": {
+      "title": "Design",
+      "description": "We develop design and select materials"
+    },
+    "prototype": {
+      "title": "Prototype",
+      "description": "We create samples for testing and approval"
+    },
+    "production": {
+      "title": "Production",
+      "description": "We launch serial production with quality control"
+    }
+  },
+  "stats": {
+    "title": "Numbers That Speak for Us",
+    "experience": "Years of Experience",
+    "clients": "Satisfied Clients",
+    "products": "Products Manufactured",
+    "satisfaction": "Quality Satisfaction"
+  }
+}
