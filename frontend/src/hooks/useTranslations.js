@@ -1,25 +1,26 @@
-// frontend/src/hooks/useTranslations.js - ПОВНИЙ КОД З NAMESPACE
+// frontend/src/hooks/useTranslations.js - ОПТИМІЗОВАНА ВЕРСІЯ БЕЗ ДУБЛЮВАННЯ
+'use client'
+
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
-import apiService from '../lib/api';
 
 // ==================== КОНФІГУРАЦІЯ ====================
 
 const CACHE_CONFIG = {
   defaultTTL: 15 * 60 * 1000, // 15 хвилин
   maxSize: 50,
-  storageKey: 'translations_cache_v2'
+  storageKey: 'translations_cache_v3'
 };
 
 const DEFAULT_LOCALE = 'uk';
 const SUPPORTED_LOCALES = ['uk', 'en'];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 // ==================== КЕШ МЕНЕДЖЕР ====================
 
 class TranslationCacheManager {
   constructor() {
     this.memoryCache = new Map();
-    this.requestQueue = new Map();
-    this.activeRequests = new Set();
+    this.activeRequests = new Map(); // Для дедуплікації запитів
   }
 
   get(key) {
@@ -63,173 +64,247 @@ class TranslationCacheManager {
 
   getStats() {
     return {
-      size: this.memoryCache.size,
+      cacheSize: this.memoryCache.size,
       activeRequests: this.activeRequests.size,
-      queuedRequests: Array.from(this.requestQueue.values()).reduce((sum, queue) => sum + queue.length, 0)
+      keys: Array.from(this.memoryCache.keys())
     };
+  }
+
+  // Дедуплікація запитів
+  async getOrFetch(key, fetchFunction) {
+    // Перевіряємо кеш
+    const cached = this.get(key);
+    if (cached) return cached;
+
+    // Перевіряємо активні запити
+    if (this.activeRequests.has(key)) {
+      return await this.activeRequests.get(key);
+    }
+
+    // Створюємо новий запит
+    const requestPromise = fetchFunction();
+    this.activeRequests.set(key, requestPromise);
+
+    try {
+      const result = await requestPromise;
+      this.set(key, result);
+      return result;
+    } finally {
+      this.activeRequests.delete(key);
+    }
   }
 }
 
 // Глобальний екземпляр кеш менеджера
 const cacheManager = new TranslationCacheManager();
 
-// ==================== ДОПОМІЖНІ ФУНКЦІЇ ====================
+// ==================== API ДЛЯ ПЕРЕКЛАДІВ ====================
 
-/**
- * Retry функція з exponential backoff
- */
-async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+class TranslationsAPI {
+  constructor() {
+    this.baseURL = API_BASE_URL;
+    this.timeout = 10000;
+  }
+
+  /**
+   * Завантаження перекладів з сервера
+   */
+  async fetchTranslations(locale, options = {}) {
+    const {
+      source = 'all',
+      namespace = null,
+      refresh = false
+    } = options;
+
+    const params = new URLSearchParams();
+    if (source !== 'all') params.append('source', source);
+    if (namespace) params.append('namespace', namespace);
+    if (refresh) params.append('refresh', 'true');
+
+    const endpoint = `/translations/${locale}/`;
+    const url = params.toString() ? `${endpoint}?${params}` : endpoint;
+    const fullURL = `${this.baseURL}${url}`;
+
+    console.log(`🌍 Завантаження перекладів: ${locale} (${source})`);
+
     try {
-      return await fn();
-    } catch (error) {
-      if (attempt === maxRetries - 1) throw error;
-      
-      const delay = baseDelay * Math.pow(2, attempt);
-      console.warn(`⚠️ Спроба ${attempt + 1} невдала, повтор через ${delay}ms:`, error.message);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-}
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-/**
- * Завантаження статичних перекладів з namespace
- */
-async function loadNamespaceTranslations(locale, namespace) {
-  try {
-    // Спочатку пробуємо завантажити конкретний файл namespace
-    const namespaceResponse = await fetch(`/locales/${locale}/${namespace}.json`);
-    if (namespaceResponse.ok) {
-      const namespaceData = await namespaceResponse.json();
-      console.log(`✅ Завантажено namespace ${namespace} для ${locale}:`, Object.keys(namespaceData).length, 'ключів');
-      return namespaceData;
-    }
-  } catch (error) {
-    console.warn(`⚠️ Не вдалося завантажити namespace ${namespace} для ${locale}:`, error.message);
-  }
+      const response = await fetch(fullURL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        signal: controller.signal,
+      });
 
-  // Fallback до загальних перекладів
-  try {
-    const commonResponse = await fetch(`/locales/${locale}/common.json`);
-    if (commonResponse.ok) {
-      const commonData = await commonResponse.json();
-      
-      // Фільтруємо тільки ключі що відносяться до namespace
-      if (namespace) {
-        const filtered = {};
-        for (const [key, value] of Object.entries(commonData)) {
-          if (key.startsWith(`${namespace}.`)) {
-            filtered[key] = value;
-          }
-        }
-        return filtered;
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      return commonData;
+
+      const data = await response.json();
+      console.log(`✅ Завантажено ${data.count || 0} перекладів для ${locale}`);
+      
+      return {
+        locale,
+        translations: data.translations || {},
+        count: data.count || 0,
+        source: data.source || source,
+        cached: data.cached || false,
+        timestamp: Date.now()
+      };
+
+    } catch (error) {
+      console.error(`❌ Помилка завантаження перекладів для ${locale}:`, error.message);
+      
+      // Fallback стратегія
+      return await this.getFallbackTranslations(locale);
     }
-  } catch (error) {
-    console.warn(`⚠️ Не вдалося завантажити common переклади для ${locale}:`, error.message);
   }
 
-  return {};
-}
-
-/**
- * Завантаження статичних перекладів як fallback
- */
-async function loadStaticTranslations(locale, namespace) {
-  // Якщо є namespace, завантажуємо спеціалізовані переклади
-  if (namespace) {
-    return await loadNamespaceTranslations(locale, namespace);
-  }
-
-  // Інакше завантажуємо загальні переклади
-  try {
-    const response = await fetch(`/locales/${locale}/common.json`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  /**
+   * Fallback переклади при недоступності API
+   */
+  async getFallbackTranslations(locale) {
+    console.warn(`🔄 Використання fallback перекладів для ${locale}`);
     
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.warn(`⚠️ Не вдалося завантажити статичні переклади для ${locale}:`, error.message);
-    return getBasicFallbackTranslations(locale);
-  }
-}
-
-/**
- * Базові fallback переклади
- */
-function getBasicFallbackTranslations(locale) {
-  const translations = {
-    'uk': {
-      'common.loading': 'Завантаження...',
-      'common.error': 'Сталася помилка',
-      'common.retry': 'Спробувати знову',
-      'common.success': 'Успішно',
-      'common.cancel': 'Скасувати',
-      'common.save': 'Зберегти',
-      'common.edit': 'Редагувати',
-      'common.delete': 'Видалити',
-      'common.search': 'Пошук',
-      'common.back': 'Назад',
-      'common.next': 'Далі',
-      'common.close': 'Закрити',
-      'header.company': 'Компанія',
-      'header.services': 'Послуги',
-      'header.projects': 'Проекти',
-      'header.about': 'Про нас',
-      'header.contact': 'Контакти',
-      'nav.home': 'Головна',
-      'footer.rights': '© 2024 Всі права захищені'
-    },
-    'en': {
-      'common.loading': 'Loading...',
-      'common.error': 'Error occurred',
-      'common.retry': 'Try again',
-      'common.success': 'Success',
-      'common.cancel': 'Cancel',
-      'common.save': 'Save',
-      'common.edit': 'Edit',
-      'common.delete': 'Delete',
-      'common.search': 'Search',
-      'common.back': 'Back',
-      'common.next': 'Next',
-      'common.close': 'Close',
-      'header.company': 'Company',
-      'header.services': 'Services',
-      'header.projects': 'Projects',
-      'header.about': 'About',
-      'header.contact': 'Contact',
-      'nav.home': 'Home',
-      'footer.rights': '© 2024 All rights reserved'
+    try {
+      // Спробуємо завантажити статичні файли
+      const staticResponse = await fetch(`/locales/${locale}/common.json`);
+      if (staticResponse.ok) {
+        const staticData = await staticResponse.json();
+        return {
+          locale,
+          translations: this.flattenObject(staticData),
+          count: Object.keys(staticData).length,
+          source: 'static_fallback',
+          cached: false,
+          fallback: true,
+          timestamp: Date.now()
+        };
+      }
+    } catch (staticError) {
+      console.warn('⚠️ Статичні файли також недоступні:', staticError.message);
     }
-  };
-  
-  return translations[locale] || translations['uk'];
+    
+    // Останній fallback - базові переклади
+    const basicTranslations = this.getBasicTranslations(locale);
+    return {
+      locale,
+      translations: basicTranslations,
+      count: Object.keys(basicTranslations).length,
+      source: 'basic_fallback',
+      cached: false,
+      fallback: true,
+      timestamp: Date.now()
+    };
+  }
+
+  /**
+   * Базові переклади для критичних випадків
+   */
+  getBasicTranslations(locale) {
+    const translations = {
+      'uk': {
+        'common.loading': 'Завантаження...',
+        'common.error': 'Сталася помилка',
+        'common.retry': 'Спробувати знову',
+        'common.success': 'Успішно',
+        'common.cancel': 'Скасувати',
+        'common.save': 'Зберегти',
+        'common.edit': 'Редагувати',
+        'common.delete': 'Видалити',
+        'common.search': 'Пошук',
+        'common.back': 'Назад',
+        'common.next': 'Далі',
+        'common.close': 'Закрити',
+        'header.company': 'Компанія',
+        'header.services': 'Послуги',
+        'header.projects': 'Проекти',
+        'header.about': 'Про нас',
+        'header.contact': 'Контакти',
+        'nav.home': 'Головна',
+        'footer.rights': '© 2024 Всі права захищені'
+      },
+      'en': {
+        'common.loading': 'Loading...',
+        'common.error': 'Error occurred',
+        'common.retry': 'Try again',
+        'common.success': 'Success',
+        'common.cancel': 'Cancel',
+        'common.save': 'Save',
+        'common.edit': 'Edit',
+        'common.delete': 'Delete',
+        'common.search': 'Search',
+        'common.back': 'Back',
+        'common.next': 'Next',
+        'common.close': 'Close',
+        'header.company': 'Company',
+        'header.services': 'Services',
+        'header.projects': 'Projects',
+        'header.about': 'About',
+        'header.contact': 'Contact',
+        'nav.home': 'Home',
+        'footer.rights': '© 2024 All rights reserved'
+      }
+    };
+    
+    return translations[locale] || translations['uk'];
+  }
+
+  /**
+   * Утиліта для сплощення об'єкта
+   */
+  flattenObject(obj, prefix = '') {
+    const flattened = {};
+    
+    for (const [key, value] of Object.entries(obj)) {
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        Object.assign(flattened, this.flattenObject(value, newKey));
+      } else {
+        flattened[newKey] = value;
+      }
+    }
+    
+    return flattened;
+  }
+
+  /**
+   * Очищення серверного кешу
+   */
+  async clearServerCache() {
+    try {
+      const response = await fetch(`${this.baseURL}/webhooks/translations/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      
+      if (response.ok) {
+        console.log('✅ Серверний кеш перекладів очищено');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('❌ Помилка очищення серверного кешу:', error.message);
+      return false;
+    }
+  }
 }
 
-/**
- * Валідатор для ключів перекладів
- */
-function validateTranslationKey(key) {
-  if (!key || typeof key !== 'string') {
-    console.warn('⚠️ Некоректний ключ перекладу:', key);
-    return false;
-  }
-  
-  // Перевіряємо формат ключа (namespace.key)
-  const keyPattern = /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*$/;
-  if (!keyPattern.test(key)) {
-    console.warn('⚠️ Ключ перекладу не відповідає формату:', key);
-    return false;
-  }
-  
-  return true;
-}
+// Глобальний екземпляр API
+const translationsAPI = new TranslationsAPI();
 
 // ==================== ГОЛОВНИЙ ХУК ====================
 
 /**
- * Хук для роботи з перекладами
+ * Основний хук для роботи з перекладами
  */
 export function useTranslations(options = {}) {
   const {
@@ -237,9 +312,7 @@ export function useTranslations(options = {}) {
     namespace = null,
     useBackend = true,
     fallbackToStatic = true,
-    enableAnalytics = false,
-    cacheTime = CACHE_CONFIG.defaultTTL,
-    validateKeys = true
+    cacheTime = CACHE_CONFIG.defaultTTL
   } = options;
 
   // State
@@ -254,7 +327,6 @@ export function useTranslations(options = {}) {
 
   // Refs
   const mountedRef = useRef(true);
-  const loadingRef = useRef(false);
 
   // Очищення при unmount
   useEffect(() => {
@@ -263,183 +335,88 @@ export function useTranslations(options = {}) {
     };
   }, []);
 
-  // Основна функція завантаження
+  // Функція завантаження перекладів
   const loadTranslations = useCallback(async (targetLocale = locale, targetNamespace = namespace) => {
-    // Валідація локалі
     if (!SUPPORTED_LOCALES.includes(targetLocale)) {
       console.error(`❌ Непідтримувана локаль: ${targetLocale}`);
       return {};
     }
 
-    // Перевіряємо чи вже завантажуємо
-    if (loadingRef.current) {
-      console.log('⏳ Завантаження вже в процесі...');
-      return state.translations;
-    }
-
-    const cacheKey = `${useBackend ? 'backend' : 'static'}_${targetLocale}_${targetNamespace || 'all'}`;
-    
-    // Перевіряємо кеш
-    const cached = cacheManager.get(cacheKey);
-    if (cached) {
-      setState(prev => ({
-        ...prev,
-        translations: cached,
-        currentLocale: targetLocale,
-        loading: false,
-        error: null,
-        source: 'cache',
-        lastUpdated: new Date().toISOString()
-      }));
-      return cached;
-    }
-
-    // Перевіряємо активні запити (deduplication)
-    if (cacheManager.activeRequests.has(cacheKey)) {
-      return new Promise((resolve) => {
-        if (!cacheManager.requestQueue.has(cacheKey)) {
-          cacheManager.requestQueue.set(cacheKey, []);
-        }
-        cacheManager.requestQueue.get(cacheKey).push(resolve);
-      });
-    }
-
-    // Позначаємо запит як активний
-    cacheManager.activeRequests.add(cacheKey);
-    loadingRef.current = true;
-
-    if (mountedRef.current) {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-    }
+    const cacheKey = `translations_${targetLocale}_${targetNamespace || 'all'}_${useBackend ? 'backend' : 'static'}`;
 
     try {
-      let translationsData = {};
-      let source = 'static';
-
-      if (useBackend) {
-        try {
-          const response = await retryWithBackoff(async () => {
-            return await apiService.getTranslations(targetLocale, {
-              namespace: targetNamespace,
-              source: 'all',
-              useCache: true,
-              refresh: false
-            });
+      const result = await cacheManager.getOrFetch(cacheKey, async () => {
+        if (useBackend) {
+          return await translationsAPI.fetchTranslations(targetLocale, {
+            namespace: targetNamespace,
+            source: 'all'
           });
-          
-          translationsData = response.translations || {};
-          source = response.source || 'backend';
-          
-          console.log(`✅ Завантажено ${Object.keys(translationsData).length} перекладів з backend`);
-          
-          // Аналітика успішного завантаження
-          if (enableAnalytics) {
-            console.log(`📊 Analytics: Translations loaded from ${source} for ${targetLocale}, count: ${Object.keys(translationsData).length}`);
-          }
-          
-        } catch (error) {
-          console.warn('⚠️ Помилка бекенду, використовуємо fallback:', error.message);
-          
-          if (fallbackToStatic) {
-            translationsData = await loadStaticTranslations(targetLocale, targetNamespace);
-            source = 'static_fallback';
-          } else {
-            throw error;
-          }
+        } else {
+          return await translationsAPI.getFallbackTranslations(targetLocale);
         }
-      } else {
-        translationsData = await loadStaticTranslations(targetLocale, targetNamespace);
-      }
-
-      // Зберігаємо в кеш
-      cacheManager.set(cacheKey, translationsData, cacheTime);
+      });
 
       if (mountedRef.current) {
         setState(prev => ({
           ...prev,
-          translations: translationsData,
+          translations: result.translations,
           currentLocale: targetLocale,
           loading: false,
           error: null,
-          source,
-          lastUpdated: new Date().toISOString()
+          source: result.source,
+          lastUpdated: result.timestamp
         }));
       }
 
-      // Сповіщаємо чергу
-      const queue = cacheManager.requestQueue.get(cacheKey) || [];
-      queue.forEach(resolve => resolve(translationsData));
-      cacheManager.requestQueue.delete(cacheKey);
-
-      return translationsData;
-
+      return result.translations;
     } catch (error) {
-      console.error(`❌ Критична помилка завантаження перекладів для ${targetLocale}:`, error.message);
-      
-      // Fallback до базових перекладів
-      const fallbackTranslations = getBasicFallbackTranslations(targetLocale);
+      console.error('❌ Помилка завантаження перекладів:', error.message);
       
       if (mountedRef.current) {
         setState(prev => ({
           ...prev,
-          translations: fallbackTranslations,
-          currentLocale: targetLocale,
           loading: false,
-          error: error.message,
-          source: 'fallback',
-          lastUpdated: new Date().toISOString()
+          error: error.message
         }));
       }
-
-      return fallbackTranslations;
-
-    } finally {
-      loadingRef.current = false;
-      cacheManager.activeRequests.delete(cacheKey);
+      
+      return {};
     }
-  }, [locale, namespace, useBackend, fallbackToStatic, cacheTime, enableAnalytics]);
+  }, [locale, namespace, useBackend]);
 
   // Функція перекладу
   const t = useCallback((key, defaultValue = key, interpolations = {}) => {
-    // Валідація ключа
-    if (validateKeys && !validateTranslationKey(key)) {
-      return defaultValue;
+    if (!key) return defaultValue;
+
+    // Додаємо namespace якщо потрібно
+    let fullKey = key;
+    if (namespace && !key.includes('.') && !key.startsWith(namespace)) {
+      fullKey = `${namespace}.${key}`;
     }
 
-    let translation = state.translations[key] || defaultValue;
-    
-    // Простка інтерполяція
+    let translation = state.translations[fullKey] || defaultValue;
+
+    // Інтерполяція змінних
     if (typeof translation === 'string' && Object.keys(interpolations).length > 0) {
-      translation = translation.replace(/\{\{(\w+)\}\}/g, (match, variable) => {
-        return interpolations[variable] !== undefined ? interpolations[variable] : match;
+      translation = translation.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+        return interpolations[varName] !== undefined ? interpolations[varName] : match;
       });
     }
-    
+
     return translation;
-  }, [state.translations, validateKeys]);
+  }, [state.translations, namespace]);
 
-  // Функція для отримання перекладу з fallback
-  const tWithFallback = useCallback((key, fallbacks = [], interpolations = {}) => {
-    // Спочатку пробуємо основний ключ
-    if (state.translations[key]) {
-      return t(key, key, interpolations);
-    }
-    
-    // Потім пробуємо fallback ключі
-    for (const fallbackKey of fallbacks) {
-      if (state.translations[fallbackKey]) {
-        return t(fallbackKey, fallbackKey, interpolations);
-      }
-    }
-    
-    // Якщо нічого не знайдено, повертаємо перший ключ
-    return key;
-  }, [t, state.translations]);
-
-  // Функція для перевірки існування перекладу
+  // Перевірка наявності перекладу
   const hasTranslation = useCallback((key) => {
-    return !!state.translations[key];
-  }, [state.translations]);
+    if (!key) return false;
+    
+    let fullKey = key;
+    if (namespace && !key.includes('.') && !key.startsWith(namespace)) {
+      fullKey = `${namespace}.${key}`;
+    }
+    
+    return state.translations.hasOwnProperty(fullKey);
+  }, [state.translations, namespace]);
 
   // Функція зміни локалі
   const changeLocale = useCallback(async (newLocale) => {
@@ -461,31 +438,14 @@ export function useTranslations(options = {}) {
     await loadTranslations(state.currentLocale, namespace);
   }, [state.currentLocale, namespace, loadTranslations]);
 
-  // Функція очищення кешу
-  const clearCache = useCallback((pattern = null) => {
-    cacheManager.clear(pattern);
-    console.log(`🧹 Кеш очищено${pattern ? ` (pattern: ${pattern})` : ''}`);
-  }, []);
-
-  // Функція для отримання статистики
-  const getStats = useCallback(() => {
-    return {
-      ...cacheManager.getStats(),
-      translationsCount: Object.keys(state.translations).length,
-      currentLocale: state.currentLocale,
-      source: state.source,
-      lastUpdated: state.lastUpdated
-    };
-  }, [state]);
-
-  // Автоматичне завантаження при монтуванні або зміні параметрів
+  // Автоматичне завантаження при монтуванні
   useEffect(() => {
     loadTranslations(locale, namespace);
   }, [locale, namespace, loadTranslations]);
 
   // Повертаємо API хука
   return {
-    // Data
+    // Дані
     translations: state.translations,
     locale: state.currentLocale,
     loading: state.loading,
@@ -493,17 +453,13 @@ export function useTranslations(options = {}) {
     source: state.source,
     lastUpdated: state.lastUpdated,
     
-    // Functions
+    // Функції
     t,
-    tWithFallback,
     hasTranslation,
     changeLocale,
     refresh,
-    clearCache,
-    loadTranslations,
-    getStats,
     
-    // Utils
+    // Утиліти
     isLoading: state.loading,
     hasError: !!state.error,
     isReady: !state.loading && !state.error && Object.keys(state.translations).length > 0,
@@ -515,18 +471,16 @@ export function useTranslations(options = {}) {
 // ==================== ХУК ДЛЯ NAMESPACE ====================
 
 /**
- * Хук для роботи з перекладами з підтримкою namespace
- * Використовується для завантаження перекладів з конкретних файлів
+ * Хук для роботи з перекладами з namespace
  */
-export function usePageTranslations(namespace = null, options = {}) {
+export function usePageTranslations(namespace, options = {}) {
   const translationsApi = useTranslations({
     namespace,
     ...options
   });
 
-  // Функція для отримання перекладу з namespace
+  // Функція перекладу з автоматичним namespace
   const t = useCallback((key, defaultValue = key, interpolations = {}) => {
-    // Якщо є namespace і ключ не містить його, додаємо автоматично
     let fullKey = key;
     if (namespace && !key.includes('.') && !key.startsWith(namespace)) {
       fullKey = `${namespace}.${key}`;
@@ -542,7 +496,7 @@ export function usePageTranslations(namespace = null, options = {}) {
   };
 }
 
-// ==================== КОНТЕКСТ ДЛЯ ПЕРЕКЛАДІВ ====================
+// ==================== КОНТЕКСТ ====================
 
 const TranslationsContext = createContext(null);
 
@@ -628,14 +582,16 @@ export async function preloadTranslations(locale, options = {}) {
   try {
     console.log(`🚀 Попереднє завантаження перекладів для ${locale}`);
     
-    const response = await apiService.getTranslations(locale, {
-      source: 'all',
-      useCache: true,
-      ...options
+    const cacheKey = `translations_${locale}_all_backend`;
+    const result = await cacheManager.getOrFetch(cacheKey, async () => {
+      return await translationsAPI.fetchTranslations(locale, {
+        source: 'all',
+        ...options
+      });
     });
     
-    console.log(`✅ Попередньо завантажено ${response.count || 0} перекладів`);
-    return response;
+    console.log(`✅ Попередньо завантажено ${result.count || 0} перекладів`);
+    return result;
   } catch (error) {
     console.error(`❌ Помилка попереднього завантаження для ${locale}:`, error.message);
     return null;
@@ -653,7 +609,7 @@ export async function syncTranslationsWithServer() {
     cacheManager.clear();
     
     // Очищаємо серверний кеш
-    await apiService.clearServerTranslationsCache();
+    await translationsAPI.clearServerCache();
     
     console.log('✅ Синхронізація завершена');
     return true;
@@ -664,58 +620,30 @@ export async function syncTranslationsWithServer() {
 }
 
 /**
- * Функція для отримання статистики перекладів
+ * Функція для отримання статистики кешу
  */
 export function getTranslationsStats() {
-  const stats = cacheManager.getStats();
-  console.log('📊 Статистика перекладів:', stats);
-  return stats;
+  return cacheManager.getStats();
 }
 
 /**
- * Функція для отримання статичних перекладів (для SSR)
+ * Функція для очищення кешу перекладів
  */
-export async function getStaticTranslations(locale, namespace = null) {
-  try {
-    return await loadStaticTranslations(locale, namespace);
-  } catch (error) {
-    console.error(`❌ Помилка завантаження статичних перекладів:`, error.message);
-    return getBasicFallbackTranslations(locale);
-  }
+export function clearTranslationsCache(pattern = null) {
+  cacheManager.clear(pattern);
+  console.log(`🧹 Кеш перекладів очищено${pattern ? ` (pattern: ${pattern})` : ''}`);
 }
 
-/**
- * Функція для форматування чисел згідно локалі
- */
-export function formatNumber(number, locale = DEFAULT_LOCALE, options = {}) {
-  try {
-    return new Intl.NumberFormat(locale, options).format(number);
-  } catch (error) {
-    console.warn('⚠️ Помилка форматування числа:', error.message);
-    return number.toString();
-  }
+// ==================== РОЗРОБНИЦЬКІ УТИЛІТИ ====================
+
+// Глобальний доступ для дебагу (тільки в development)
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  window.translationsAPI = translationsAPI;
+  window.translationsCache = cacheManager;
+  window.clearTranslationsCache = clearTranslationsCache;
+  window.getTranslationsStats = getTranslationsStats;
+  window.syncTranslationsWithServer = syncTranslationsWithServer;
 }
 
-/**
- * Функція для форматування дат згідно локалі
- */
-export function formatDate(date, locale = DEFAULT_LOCALE, options = {}) {
-  try {
-    return new Intl.DateTimeFormat(locale, options).format(new Date(date));
-  } catch (error) {
-    console.warn('⚠️ Помилка форматування дати:', error.message);
-    return date.toString();
-  }
-}
-
-/**
- * Функція для отримання напрямку тексту (RTL/LTR)
- */
-export function getTextDirection(locale) {
-  const rtlLocales = ['ar', 'he', 'fa', 'ur'];
-  return rtlLocales.includes(locale) ? 'rtl' : 'ltr';
-}
-
-// ==================== ЕКСПОРТ ЗА ЗАМОВЧУВАННЯМ ====================
-
+// Експорт за замовчуванням
 export default useTranslations;

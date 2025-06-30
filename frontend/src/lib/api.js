@@ -1,71 +1,113 @@
-// frontend/src/lib/api.js - ВИПРАВЛЕНИЙ
+// frontend/src/lib/api.js - API БЕЗ ПЕРЕКЛАДІВ
+'use client'
+
+// ==================== КОНФІГУРАЦІЯ API ====================
+
+const API_CONFIG = {
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
+  timeout: 10000,
+  retries: 3,
+  retryDelay: 1000,
+};
+
+// ==================== API SERVICE ====================
+
 class ApiService {
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-    this.timeout = 30000; // 30 секунд
-    
-    // Внутрішній кеш (без localStorage)
+    this.baseURL = API_CONFIG.baseURL;
+    this.timeout = API_CONFIG.timeout;
     this.cache = new Map();
-    this.activeRequests = new Map();
+    this.activeRequests = new Map(); // Для дедуплікації запитів
   }
 
-  // Базовий метод для запитів
+  // ==================== БАЗОВІ HTTP МЕТОДИ ====================
+
+  /**
+   * Базовий запит з обробкою помилок та timeout
+   */
   async request(endpoint, options = {}) {
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
+    
+    const defaultOptions = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      timeout: this.timeout,
+    };
+
+    const requestOptions = { ...defaultOptions, ...options };
+    
+    // Створюємо унікальний ключ для запиту
+    const requestKey = `${requestOptions.method || 'GET'}_${url}_${JSON.stringify(requestOptions.body || {})}`;
+    
+    // Перевіряємо чи вже виконується такий запит
+    if (this.activeRequests.has(requestKey)) {
+      console.log(`⏳ Очікування активного запиту: ${endpoint}`);
+      return await this.activeRequests.get(requestKey);
+    }
+
+    // Створюємо promise для запиту
+    const requestPromise = this._executeRequest(url, requestOptions);
+    this.activeRequests.set(requestKey, requestPromise);
+
+    try {
+      const result = await requestPromise;
+      return result;
+    } finally {
+      this.activeRequests.delete(requestKey);
+    }
+  }
+
+  /**
+   * Виконання HTTP запиту з timeout
+   */
+  async _executeRequest(url, options) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
-      const url = `${this.baseURL}${endpoint}`;
-      
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...options.headers,
-        },
-        signal: controller.signal,
+      const response = await fetch(url, {
         ...options,
-      };
+        signal: controller.signal,
+      });
 
-      console.log(`🌐 API запит: ${options.method || 'GET'} ${url}`);
-
-      const response = await fetch(url, config);
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        if (response.status === 429) {
-          console.warn('⚠️ Rate limit перевищено, чекаємо...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          return this.request(endpoint, options); // Retry
-        }
-        
-        const errorData = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorData}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
       }
 
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        console.log(`✅ API відповідь: ${Object.keys(data).length || 'OK'} записів`);
-        return data;
-      } else {
-        return await response.text();
+        return await response.json();
       }
+
+      return await response.text();
     } catch (error) {
       clearTimeout(timeoutId);
+      
       if (error.name === 'AbortError') {
-        throw new Error('Запит перевищив час очікування');
+        throw new Error(`Запит перевищив час очікування (${this.timeout}ms)`);
       }
-      console.error(`❌ API помилка: ${error.message}`);
+      
       throw error;
     }
   }
 
   // GET запит
   async get(endpoint, params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${endpoint}?${queryString}` : endpoint;
-    return this.request(url, { method: 'GET' });
+    const url = new URL(endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`);
+    
+    // Додаємо параметри до URL
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null) {
+        url.searchParams.append(key, params[key]);
+      }
+    });
+    
+    return this.request(url.toString(), { method: 'GET' });
   }
 
   // POST запит
@@ -76,258 +118,238 @@ class ApiService {
     });
   }
 
-  // ==================== ПЕРЕКЛАДИ ====================
-  
-  /**
-   * Универсальный метод для получения переводов
-   */
-  async getTranslations(locale = 'uk', options = {}) {
-    const {
-      source = 'all',           // all, static, po, dynamic
-      namespace = null,         // фільтр за namespace
-      useCache = true,         // використовувати кеш
-      refresh = false          // примусове оновлення
-    } = options;
-    
-    const cacheKey = `translations_${locale}_${source}_${namespace || 'all'}`;
-    
-    // Перевіряємо кеш
-    if (useCache && !refresh && this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      const cacheAge = Date.now() - cached.timestamp;
-      const maxAge = 15 * 60 * 1000; // 15 хвилин
-      
-      if (cacheAge < maxAge) {
-        console.log(`📦 Використання кешованих перекладів для ${locale}`);
-        return cached.data;
-      } else {
-        this.cache.delete(cacheKey);
-      }
-    }
-    
-    // Перевіряємо активні запити (deduplication)
-    if (this.activeRequests.has(cacheKey)) {
-      console.log(`⏳ Очікування активного запиту перекладів для ${locale}`);
-      return await this.activeRequests.get(cacheKey);
-    }
-    
-    // Створюємо новий запит
-    const requestPromise = this._fetchTranslations(locale, source, namespace, refresh);
-    this.activeRequests.set(cacheKey, requestPromise);
-    
-    try {
-      const result = await requestPromise;
-      
-      // Зберігаємо в кеш
-      if (useCache) {
-        this.cache.set(cacheKey, {
-          data: result,
-          timestamp: Date.now()
-        });
-        
-        // Обмежуємо розмір кешу
-        if (this.cache.size > 50) {
-          const firstKey = this.cache.keys().next().value;
-          this.cache.delete(firstKey);
-        }
-      }
-      
-      return result;
-    } finally {
-      this.activeRequests.delete(cacheKey);
-    }
+  // PUT запит
+  async put(endpoint, data = {}) {
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
-  
-  /**
-   * Внутрішній метод для завантаження перекладів
-   */
-  async _fetchTranslations(locale, source, namespace, refresh) {
-    try {
-      const params = new URLSearchParams();
-      if (source !== 'all') params.append('source', source);
-      if (namespace) params.append('namespace', namespace);
-      if (refresh) params.append('refresh', 'true');
-      
-      const endpoint = `/translations/${locale}/`;
-      const url = params.toString() ? `${endpoint}?${params}` : endpoint;
-      
-      console.log(`🌍 Завантаження перекладів: ${locale} (${source})`);
-      
-      const response = await this.get(url);
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      console.log(`✅ Завантажено ${response.count || 0} перекладів для ${locale}`);
-      return response;
-      
-    } catch (error) {
-      console.error(`❌ Помилка завантаження перекладів для ${locale}:`, error.message);
-      
-      // Fallback стратегія
-      return await this._getFallbackTranslations(locale);
-    }
+
+  // PATCH запит
+  async patch(endpoint, data = {}) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   }
-  
-  /**
-   * Fallback переклади якщо API недоступний
-   */
-  async _getFallbackTranslations(locale) {
-    console.warn(`🔄 Використання fallback перекладів для ${locale}`);
-    
-    try {
-      // Спробуємо завантажити статичні файли
-      const staticResponse = await fetch(`/locales/${locale}/common.json`);
-      if (staticResponse.ok) {
-        const staticData = await staticResponse.json();
-        return {
-          locale,
-          translations: this._flattenObject(staticData),
-          count: Object.keys(staticData).length,
-          source: 'static_fallback',
-          cached: false,
-          fallback: true
-        };
-      }
-    } catch (staticError) {
-      console.warn('⚠️ Статичні файли також недоступні:', staticError.message);
-    }
-    
-    // Останній fallback - базові переклади
-    const basicTranslations = this._getBasicTranslations(locale);
-    return {
-      locale,
-      translations: basicTranslations,
-      count: Object.keys(basicTranslations).length,
-      source: 'basic_fallback',
-      cached: false,
-      fallback: true
-    };
+
+  // DELETE запит
+  async delete(endpoint) {
+    return this.request(endpoint, { method: 'DELETE' });
   }
-  
+
+  // ==================== КЕШ МЕТОДИ ====================
+
   /**
-   * Базові переклади для критичних випадків
+   * Отримати дані з кешу
    */
-  _getBasicTranslations(locale) {
-    if (locale === 'en') {
-      return {
-        'common.loading': 'Loading...',
-        'common.error': 'Error occurred',
-        'header.company': 'Company',
-        'header.services': 'Services',
-        'header.contact': 'Contact'
-      };
-    } else {
-      return {
-        'common.loading': 'Завантаження...',
-        'common.error': 'Сталася помилка', 
-        'header.company': 'Компанія',
-        'header.services': 'Послуги',
-        'header.contact': 'Контакти'
-      };
+  getCached(key) {
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      return cached.data;
     }
+    this.cache.delete(key);
+    return null;
   }
-  
+
   /**
-   * Утиліта для сплощення об'єкта
+   * Зберегти дані в кеш
    */
-  _flattenObject(obj, prefix = '') {
-    const flattened = {};
-    
-    for (const [key, value] of Object.entries(obj)) {
-      const newKey = prefix ? `${prefix}.${key}` : key;
-      
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        Object.assign(flattened, this._flattenObject(value, newKey));
-      } else {
-        flattened[newKey] = value;
-      }
-    }
-    
-    return flattened;
+  setCache(key, data, ttl = 5 * 60 * 1000) { // 5 хвилин за замовчуванням
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
   }
-  
+
   /**
-   * Очищення кешу перекладів
+   * Очистити кеш
    */
-  clearTranslationsCache(locale = null) {
-    if (locale) {
-      // Очищаємо кеш для конкретної локалі
+  clearCache(pattern = null) {
+    if (pattern) {
       for (const [key] of this.cache) {
-        if (key.includes(`translations_${locale}_`)) {
+        if (key.includes(pattern)) {
           this.cache.delete(key);
         }
       }
     } else {
-      // Очищаємо весь кеш перекладів
-      for (const [key] of this.cache) {
-        if (key.startsWith('translations_')) {
-          this.cache.delete(key);
-        }
-      }
-    }
-    console.log(`🧹 Очищено кеш перекладів${locale ? ` для ${locale}` : ''}`);
-  }
-  
-  /**
-   * Webhook для очищення серверного кешу
-   */
-  async clearServerTranslationsCache() {
-    try {
-      await this.post('/webhooks/translations/', {});
-      console.log('✅ Серверний кеш перекладів очищено');
-      return true;
-    } catch (error) {
-      console.error('❌ Помилка очищення серверного кешу:', error.message);
-      return false;
+      this.cache.clear();
     }
   }
-  
-  // ==================== ІНШІ API МЕТОДИ ====================
-  
-  // Послуги
+
+  // ==================== API МЕТОДИ ДОДАТКУ ====================
+
+  // ========== ПОСЛУГИ ==========
   async getServices() {
-    return this.get('/services/');
+    const cacheKey = 'services';
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/services/');
+    this.setCache(cacheKey, data);
+    return data;
   }
-  
-  // Проекти
-  async getProjects() {
-    return this.get('/projects/');
+
+  async getService(id) {
+    return this.get(`/services/${id}/`);
   }
-  
+
+  // ========== ПРОЕКТИ ==========
+  async getProjects(params = {}) {
+    const cacheKey = `projects_${JSON.stringify(params)}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/projects/', params);
+    this.setCache(cacheKey, data);
+    return data;
+  }
+
+  async getProject(id) {
+    return this.get(`/projects/${id}/`);
+  }
+
   async getProjectCategories() {
-    return this.get('/project-categories/');
+    const cacheKey = 'project_categories';
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/project-categories/');
+    this.setCache(cacheKey, data);
+    return data;
   }
-  
-  // Контент сторінок
-  async getHomePage() {
-    return this.get('/homepage/');
+
+  // ========== КОНТЕНТ СТОРІНОК ==========
+  async getHomePage(locale = 'uk') {
+    const cacheKey = `homepage_${locale}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/homepage/', { locale });
+    this.setCache(cacheKey, data);
+    return data;
   }
-  
-  async getAboutPage() {
-    return this.get('/about/');
+
+  async getAboutPage(locale = 'uk') {
+    const cacheKey = `about_${locale}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/about/', { locale });
+    this.setCache(cacheKey, data);
+    return data;
   }
-  
-  // Контакти
+
+  async getCompanyPage(locale = 'uk') {
+    const cacheKey = `company_${locale}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/company/', { locale });
+    this.setCache(cacheKey, data);
+    return data;
+  }
+
+  // ========== КОНТАКТИ ==========
   async getOffices() {
-    return this.get('/offices/');
+    const cacheKey = 'offices';
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/offices/');
+    this.setCache(cacheKey, data);
+    return data;
   }
-  
+
   async submitContactForm(data) {
     return this.post('/contact-inquiries/', data);
   }
-  
-  // Вакансії
-  async getJobs() {
-    return this.get('/jobs/');
+
+  // ========== ВАКАНСІЇ ==========
+  async getJobs(params = {}) {
+    const cacheKey = `jobs_${JSON.stringify(params)}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/jobs/', params);
+    this.setCache(cacheKey, data, 2 * 60 * 1000); // 2 хвилини для вакансій
+    return data;
   }
-  
+
+  async getJob(id) {
+    return this.get(`/jobs/${id}/`);
+  }
+
   async submitJobApplication(data) {
     return this.post('/job-applications/', data);
   }
+
+  // ========== БЛОГ (якщо є) ==========
+  async getBlogPosts(params = {}) {
+    const cacheKey = `blog_posts_${JSON.stringify(params)}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/blog/', params);
+    this.setCache(cacheKey, data);
+    return data;
+  }
+
+  async getBlogPost(id) {
+    return this.get(`/blog/${id}/`);
+  }
+
+  // ========== НАЛАШТУВАННЯ ==========
+  async getSiteSettings() {
+    const cacheKey = 'site_settings';
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.get('/settings/');
+    this.setCache(cacheKey, data, 30 * 60 * 1000); // 30 хвилин для налаштувань
+    return data;
+  }
+
+  // ========== ПОШУК ==========
+  async search(query, params = {}) {
+    if (!query.trim()) return { results: [], count: 0 };
+    
+    return this.get('/search/', { q: query, ...params });
+  }
+
+  // ========== СТАТИСТИКА ====================
+
+  /**
+   * Отримати статистику використання API
+   */
+  getStats() {
+    return {
+      cacheSize: this.cache.size,
+      activeRequests: this.activeRequests.size,
+      baseURL: this.baseURL,
+      timeout: this.timeout
+    };
+  }
+
+  /**
+   * Очистити всі активні запити (для emergency reset)
+   */
+  clearActiveRequests() {
+    this.activeRequests.clear();
+    console.log('🧹 Очищено всі активні запити');
+  }
 }
 
-// Експортуємо єдиний екземпляр
+// ==================== ЕКСПОРТ ====================
+
+// Створюємо єдиний екземпляр
 const apiService = new ApiService();
+
+// Глобальний доступ для дебагу (тільки в development)
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  window.apiService = apiService;
+}
+
 export default apiService;

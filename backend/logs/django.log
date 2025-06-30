@@ -42,3 +42,95 @@ INFO 2025-06-30 10:07:18,699 middleware 16904 6008 Cache HIT для: trans_cache_97
 INFO 2025-06-30 10:07:18,701 basehttp 16904 6008 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
 INFO 2025-06-30 10:07:22,805 middleware 16904 6008 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
 INFO 2025-06-30 10:07:22,809 basehttp 16904 6008 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 10:21:27,847 middleware 16904 9408 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 10:21:27,849 basehttp 16904 9408 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 10:46:28,240 middleware 16904 14920 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 10:46:28,242 basehttp 16904 14920 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 10:51:41,962 basehttp 16904 8752 "OPTIONS /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 0
+INFO 2025-06-30 10:51:42,188 translations_views 16904 8752 Завантажено 0 статичних перекладів
+INFO 2025-06-30 10:51:42,400 translations_views 16904 8752 Завантажено 203 po перекладів
+INFO 2025-06-30 10:51:42,478 translations_views 16904 8752 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 10:51:42,479 translations_views 16904 8752 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 10:51:42,529 translations_views 16904 8752 Успішно повернуто 203 перекладів для uk
+INFO 2025-06-30 10:51:42,613 middleware 16904 8752 Cache SET для: trans_cache_64367148399fdc4898... (timeout: 3600s)
+INFO 2025-06-30 10:51:42,615 basehttp 16904 8752 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 11941
+INFO 2025-06-30 10:51:47,567 middleware 16904 8752 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 10:51:47,572 basehttp 16904 8752 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 10:51:47,797 middleware 16904 16248 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 10:51:47,799 basehttp 16904 16248 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 10:54:57,207 translations_views 16904 16248 Завантажено 254 статичних перекладів
+INFO 2025-06-30 10:54:57,223 middleware 16904 8752 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 10:54:57,229 translations_views 16904 16248 Завантажено 203 po перекладів
+INFO 2025-06-30 10:54:57,233 basehttp 16904 8752 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 10:54:57,564 translations_views 16904 16248 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 10:54:57,565 translations_views 16904 16248 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 10:54:57,609 translations_views 16904 16248 Успішно повернуто 254 перекладів для uk
+INFO 2025-06-30 10:54:57,658 middleware 16904 16248 Cache SET для: trans_cache_979c25ecc4ad4b18f9... (timeout: 3600s)
+INFO 2025-06-30 10:54:57,660 basehttp 16904 16248 "GET /api/v1/translations/uk/ HTTP/1.1" 200 14161
+INFO 2025-06-30 11:01:15,056 middleware 16904 944 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 11:01:15,058 basehttp 16904 944 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 11:01:27,389 middleware 16904 17132 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 11:01:27,471 basehttp 16904 17132 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 11:05:03,358 middleware 16904 12428 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 11:05:03,432 basehttp 16904 12428 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 11:05:03,729 middleware 16904 13320 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 11:05:03,731 basehttp 16904 13320 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 11:48:41,656 middleware 16904 14632 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 11:48:41,658 middleware 16904 12788 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 11:48:41,668 basehttp 16904 14632 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 11:48:41,672 basehttp 16904 12788 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 12:32:46,670 basehttp 16904 16216 "OPTIONS /api/v1/translations/uk/ HTTP/1.1" 200 0
+INFO 2025-06-30 12:32:46,787 translations_views 16904 16216 Завантажено 0 статичних перекладів
+INFO 2025-06-30 12:32:46,789 translations_views 16904 12464 Завантажено 254 статичних перекладів
+INFO 2025-06-30 12:32:46,806 translations_views 16904 16216 Завантажено 203 po перекладів
+INFO 2025-06-30 12:32:46,814 translations_views 16904 16216 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 12:32:46,816 translations_views 16904 16216 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 12:32:46,816 translations_views 16904 12464 Завантажено 203 po перекладів
+INFO 2025-06-30 12:32:46,866 translations_views 16904 16216 Успішно повернуто 203 перекладів для uk
+INFO 2025-06-30 12:32:46,983 middleware 16904 16216 Cache SET для: trans_cache_64367148399fdc4898... (timeout: 3600s)
+INFO 2025-06-30 12:32:46,985 basehttp 16904 16216 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 11941
+INFO 2025-06-30 12:32:47,053 translations_views 16904 12464 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 12:32:47,055 translations_views 16904 12464 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 12:32:47,101 translations_views 16904 12464 Успішно повернуто 254 перекладів для uk
+INFO 2025-06-30 12:32:47,204 middleware 16904 12464 Cache SET для: trans_cache_979c25ecc4ad4b18f9... (timeout: 3600s)
+INFO 2025-06-30 12:32:47,206 basehttp 16904 12464 "GET /api/v1/translations/uk/ HTTP/1.1" 200 14161
+INFO 2025-06-30 12:32:59,180 middleware 16904 12464 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 12:32:59,183 basehttp 16904 12464 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 12:32:59,184 middleware 16904 16216 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 12:32:59,188 basehttp 16904 16216 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 12:35:55,454 middleware 16904 11020 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 12:35:55,459 basehttp 16904 11020 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 12:35:55,496 middleware 16904 428 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 12:35:55,539 basehttp 16904 428 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 12:40:42,797 middleware 16904 2480 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 12:40:42,799 middleware 16904 15240 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 12:40:42,804 basehttp 16904 2480 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 12:40:42,851 basehttp 16904 15240 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 13:32:41,007 basehttp 16904 15848 "OPTIONS /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 0
+INFO 2025-06-30 13:32:41,108 middleware 16904 8868 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 13:32:41,111 middleware 16904 15848 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 13:32:41,126 basehttp 16904 8868 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 13:32:41,130 basehttp 16904 15848 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 13:39:01,108 translations_views 16904 2676 Завантажено 254 статичних перекладів
+INFO 2025-06-30 13:39:01,112 translations_views 16904 10500 Завантажено 0 статичних перекладів
+INFO 2025-06-30 13:39:01,139 translations_views 16904 2676 Завантажено 203 po перекладів
+INFO 2025-06-30 13:39:01,148 translations_views 16904 10500 Завантажено 203 po перекладів
+INFO 2025-06-30 13:39:01,183 translations_views 16904 10500 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 13:39:01,193 translations_views 16904 10500 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 13:39:01,295 translations_views 16904 10500 Успішно повернуто 203 перекладів для uk
+INFO 2025-06-30 13:39:01,308 middleware 16904 10500 Cache SET для: trans_cache_64367148399fdc4898... (timeout: 3600s)
+INFO 2025-06-30 13:39:01,310 basehttp 16904 10500 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 11941
+INFO 2025-06-30 13:39:01,698 translations_views 16904 2676 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 13:39:01,699 translations_views 16904 2676 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 13:39:01,744 translations_views 16904 2676 Успішно повернуто 254 перекладів для uk
+INFO 2025-06-30 13:39:01,794 middleware 16904 2676 Cache SET для: trans_cache_979c25ecc4ad4b18f9... (timeout: 3600s)
+INFO 2025-06-30 13:39:01,796 basehttp 16904 2676 "GET /api/v1/translations/uk/ HTTP/1.1" 200 14161
+INFO 2025-06-30 14:34:49,474 basehttp 16904 2676 "OPTIONS /api/v1/translations/uk/ HTTP/1.1" 200 0
+INFO 2025-06-30 14:34:49,660 middleware 16904 2676 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 14:34:49,663 middleware 16904 10600 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 14:34:49,672 basehttp 16904 2676 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 14:34:49,672 basehttp 16904 10600 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
+INFO 2025-06-30 14:35:20,725 middleware 16904 3808 Cache HIT для: trans_cache_979c25ecc4ad4b18f9...
+INFO 2025-06-30 14:35:20,730 middleware 16904 9052 Cache HIT для: trans_cache_64367148399fdc4898...
+INFO 2025-06-30 14:35:20,734 basehttp 16904 3808 "GET /api/v1/translations/uk/ HTTP/1.1" 200 36227
+INFO 2025-06-30 14:35:20,735 basehttp 16904 9052 "GET /api/v1/translations/uk/?namespace=homepage HTTP/1.1" 200 31561
