@@ -1,66 +1,42 @@
-// frontend/src/lib/api.js (спрощена версія для Context)
-class SimpleApiService {
+// frontend/src/lib/api.js - ВИПРАВЛЕНИЙ
+class ApiService {
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
-    this.timeout = 10000; // 10 секунд
+    this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+    this.timeout = 30000; // 30 секунд
     
-    // Simple rate limiting
-    this.lastRequestTime = 0
-    this.requestDelay = 500 // мілісекунди між запитами
-    
-    // Request deduplication для перекладів
-    this.translationRequests = new Map()
-  }
-
-  // Простий rate limiting
-  async throttleRequest() {
-    const now = Date.now()
-    const timeSinceLastRequest = now - this.lastRequestTime
-    
-    if (timeSinceLastRequest < this.requestDelay) {
-      const delay = this.requestDelay - timeSinceLastRequest
-      await new Promise(resolve => setTimeout(resolve, delay))
-    }
-    
-    this.lastRequestTime = Date.now()
+    // Внутрішній кеш (без localStorage)
+    this.cache = new Map();
+    this.activeRequests = new Map();
   }
 
   // Базовий метод для запитів
   async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
-    
-    // Rate limiting
-    await this.throttleRequest()
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    if (options.body instanceof FormData) {
-      delete config.headers['Content-Type'];
-    }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-      const response = await fetch(url, {
-        ...config,
+      const url = `${this.baseURL}${endpoint}`;
+      
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...options.headers,
+        },
         signal: controller.signal,
-      });
+        ...options,
+      };
 
+      console.log(`🌐 API запит: ${options.method || 'GET'} ${url}`);
+
+      const response = await fetch(url, config);
       clearTimeout(timeoutId);
 
       if (!response.ok) {
         if (response.status === 429) {
-          console.warn('⚠️ Rate limit exceeded, waiting...')
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          throw new Error('Rate limit exceeded')
+          console.warn('⚠️ Rate limit перевищено, чекаємо...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          return this.request(endpoint, options); // Retry
         }
         
         const errorData = await response.text();
@@ -69,14 +45,18 @@ class SimpleApiService {
 
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
-        return await response.json()
+        const data = await response.json();
+        console.log(`✅ API відповідь: ${Object.keys(data).length || 'OK'} записів`);
+        return data;
       } else {
         return await response.text();
       }
     } catch (error) {
+      clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
         throw new Error('Запит перевищив час очікування');
       }
+      console.error(`❌ API помилка: ${error.message}`);
       throw error;
     }
   }
@@ -96,163 +76,258 @@ class SimpleApiService {
     });
   }
 
-  // Додайте метод для отримання перекладів
-async getTranslations(locale = 'uk') {
-  const cacheKey = `translations_${locale}`;
+  // ==================== ПЕРЕКЛАДИ ====================
   
-  // Перевіряємо localStorage кеш
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) {
-    const { data, timestamp } = JSON.parse(cached);
-    const cacheTime = 15 * 60 * 1000; // 15 хвилин
+  /**
+   * Универсальный метод для получения переводов
+   */
+  async getTranslations(locale = 'uk', options = {}) {
+    const {
+      source = 'all',           // all, static, po, dynamic
+      namespace = null,         // фільтр за namespace
+      useCache = true,         // використовувати кеш
+      refresh = false          // примусове оновлення
+    } = options;
     
-    if (Date.now() - timestamp < cacheTime) {
-      console.log(`📦 Використання кешованих перекладів для ${locale}`);
-      return data;
+    const cacheKey = `translations_${locale}_${source}_${namespace || 'all'}`;
+    
+    // Перевіряємо кеш
+    if (useCache && !refresh && this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey);
+      const cacheAge = Date.now() - cached.timestamp;
+      const maxAge = 15 * 60 * 1000; // 15 хвилин
+      
+      if (cacheAge < maxAge) {
+        console.log(`📦 Використання кешованих перекладів для ${locale}`);
+        return cached.data;
+      } else {
+        this.cache.delete(cacheKey);
+      }
+    }
+    
+    // Перевіряємо активні запити (deduplication)
+    if (this.activeRequests.has(cacheKey)) {
+      console.log(`⏳ Очікування активного запиту перекладів для ${locale}`);
+      return await this.activeRequests.get(cacheKey);
+    }
+    
+    // Створюємо новий запит
+    const requestPromise = this._fetchTranslations(locale, source, namespace, refresh);
+    this.activeRequests.set(cacheKey, requestPromise);
+    
+    try {
+      const result = await requestPromise;
+      
+      // Зберігаємо в кеш
+      if (useCache) {
+        this.cache.set(cacheKey, {
+          data: result,
+          timestamp: Date.now()
+        });
+        
+        // Обмежуємо розмір кешу
+        if (this.cache.size > 50) {
+          const firstKey = this.cache.keys().next().value;
+          this.cache.delete(firstKey);
+        }
+      }
+      
+      return result;
+    } finally {
+      this.activeRequests.delete(cacheKey);
     }
   }
   
-  try {
-    const response = await this.get(`/translations/${locale}/`);
+  /**
+   * Внутрішній метод для завантаження перекладів
+   */
+  async _fetchTranslations(locale, source, namespace, refresh) {
+    try {
+      const params = new URLSearchParams();
+      if (source !== 'all') params.append('source', source);
+      if (namespace) params.append('namespace', namespace);
+      if (refresh) params.append('refresh', 'true');
+      
+      const endpoint = `/translations/${locale}/`;
+      const url = params.toString() ? `${endpoint}?${params}` : endpoint;
+      
+      console.log(`🌍 Завантаження перекладів: ${locale} (${source})`);
+      
+      const response = await this.get(url);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      console.log(`✅ Завантажено ${response.count || 0} перекладів для ${locale}`);
+      return response;
+      
+    } catch (error) {
+      console.error(`❌ Помилка завантаження перекладів для ${locale}:`, error.message);
+      
+      // Fallback стратегія
+      return await this._getFallbackTranslations(locale);
+    }
+  }
+  
+  /**
+   * Fallback переклади якщо API недоступний
+   */
+  async _getFallbackTranslations(locale) {
+    console.warn(`🔄 Використання fallback перекладів для ${locale}`);
     
-    // Зберігаємо в localStorage
-    localStorage.setItem(cacheKey, JSON.stringify({
-      data: response,
-      timestamp: Date.now()
-    }));
+    try {
+      // Спробуємо завантажити статичні файли
+      const staticResponse = await fetch(`/locales/${locale}/common.json`);
+      if (staticResponse.ok) {
+        const staticData = await staticResponse.json();
+        return {
+          locale,
+          translations: this._flattenObject(staticData),
+          count: Object.keys(staticData).length,
+          source: 'static_fallback',
+          cached: false,
+          fallback: true
+        };
+      }
+    } catch (staticError) {
+      console.warn('⚠️ Статичні файли також недоступні:', staticError.message);
+    }
     
-    return response;
-  } catch (error) {
-    console.error('Помилка завантаження перекладів:', error);
-    
-    // Fallback до статичних файлів
-    const staticResponse = await fetch(`/locales/${locale}/common.json`);
-    if (staticResponse.ok) {
-      const staticData = await staticResponse.json();
+    // Останній fallback - базові переклади
+    const basicTranslations = this._getBasicTranslations(locale);
+    return {
+      locale,
+      translations: basicTranslations,
+      count: Object.keys(basicTranslations).length,
+      source: 'basic_fallback',
+      cached: false,
+      fallback: true
+    };
+  }
+  
+  /**
+   * Базові переклади для критичних випадків
+   */
+  _getBasicTranslations(locale) {
+    if (locale === 'en') {
       return {
-        locale,
-        translations: this.flattenObject(staticData),
-        count: Object.keys(staticData).length,
-        source: 'static'
+        'common.loading': 'Loading...',
+        'common.error': 'Error occurred',
+        'header.company': 'Company',
+        'header.services': 'Services',
+        'header.contact': 'Contact'
+      };
+    } else {
+      return {
+        'common.loading': 'Завантаження...',
+        'common.error': 'Сталася помилка', 
+        'header.company': 'Компанія',
+        'header.services': 'Послуги',
+        'header.contact': 'Контакти'
       };
     }
-    
-    throw error;
   }
-}
-
-flattenObject(obj, prefix = '') {
-  const flattened = {};
   
-  for (const [key, value] of Object.entries(obj)) {
-    const newKey = prefix ? `${prefix}.${key}` : key;
+  /**
+   * Утиліта для сплощення об'єкта
+   */
+  _flattenObject(obj, prefix = '') {
+    const flattened = {};
     
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      Object.assign(flattened, this.flattenObject(value, newKey));
+    for (const [key, value] of Object.entries(obj)) {
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        Object.assign(flattened, this._flattenObject(value, newKey));
+      } else {
+        flattened[newKey] = value;
+      }
+    }
+    
+    return flattened;
+  }
+  
+  /**
+   * Очищення кешу перекладів
+   */
+  clearTranslationsCache(locale = null) {
+    if (locale) {
+      // Очищаємо кеш для конкретної локалі
+      for (const [key] of this.cache) {
+        if (key.includes(`translations_${locale}_`)) {
+          this.cache.delete(key);
+        }
+      }
     } else {
-      flattened[newKey] = value;
+      // Очищаємо весь кеш перекладів
+      for (const [key] of this.cache) {
+        if (key.startsWith('translations_')) {
+          this.cache.delete(key);
+        }
+      }
+    }
+    console.log(`🧹 Очищено кеш перекладів${locale ? ` для ${locale}` : ''}`);
+  }
+  
+  /**
+   * Webhook для очищення серверного кешу
+   */
+  async clearServerTranslationsCache() {
+    try {
+      await this.post('/webhooks/translations/', {});
+      console.log('✅ Серверний кеш перекладів очищено');
+      return true;
+    } catch (error) {
+      console.error('❌ Помилка очищення серверного кешу:', error.message);
+      return false;
     }
   }
   
-  return flattened;
-}
-
-  // ==================== ІСНУЮЧІ МЕТОДИ ====================
-
-  async getHomePage() {
-    return this.get('/homepage/');
+  // ==================== ІНШІ API МЕТОДИ ====================
+  
+  // Послуги
+  async getServices() {
+    return this.get('/services/');
   }
-
-  async getAboutPage() {
-    return this.get('/about/');
+  
+  // Проекти
+  async getProjects() {
+    return this.get('/projects/');
   }
-
-  async getServices(params = {}) {
-    return this.get('/services/', params);
-  }
-
-  async getServiceById(id) {
-    return this.get(`/services/${id}/`);
-  }
-
+  
   async getProjectCategories() {
     return this.get('/project-categories/');
   }
-
-  async getProjects(params = {}) {
-    return this.get('/projects/', params);
+  
+  // Контент сторінок
+  async getHomePage() {
+    return this.get('/homepage/');
   }
-
-  async getProjectById(id) {
-    return this.get(`/projects/${id}/`);
+  
+  async getAboutPage() {
+    return this.get('/about/');
   }
-
-  async getFeaturedProjects() {
-    return this.get('/projects/featured/');
-  }
-
-  async getProjectsByCategory(categorySlug) {
-    return this.get('/projects/by_category/', { category: categorySlug });
-  }
-
-  async getJobs(params = {}) {
-    return this.get('/jobs/', params);
-  }
-
-  async getJobById(id) {
-    return this.get(`/jobs/${id}/`);
-  }
-
-  async getActiveJobs() {
-    return this.get('/jobs/active/');
-  }
-
-  async submitJobApplication(data) {
-    const formData = new FormData();
-    
-    Object.keys(data).forEach(key => {
-      if (key === 'resume' && data[key] instanceof File) {
-        formData.append(key, data[key]);
-      } else {
-        formData.append(key, data[key]);
-      }
-    });
-
-    return this.request('/job-applications/', {
-      method: 'POST',
-      body: formData,
-      headers: {},
-    });
-  }
-
+  
+  // Контакти
   async getOffices() {
     return this.get('/offices/');
   }
-
-  async submitContactInquiry(data) {
+  
+  async submitContactForm(data) {
     return this.post('/contact-inquiries/', data);
   }
-
-  async getPartnershipInfo() {
-    return this.get('/partnership-info/');
+  
+  // Вакансії
+  async getJobs() {
+    return this.get('/jobs/');
   }
-
-  async submitPartnerInquiry(data) {
-    return this.post('/partner-inquiries/', data);
-  }
-
-  async getWorkplacePhotos() {
-    return this.get('/workplace-photos/');
-  }
-
-  // Очистити активні запити перекладів
-  clearTranslationRequests() {
-    this.translationRequests.clear()
-    console.log('🧹 Очищено активні запити перекладів')
+  
+  async submitJobApplication(data) {
+    return this.post('/job-applications/', data);
   }
 }
 
-// Створюємо singleton instance
-const apiService = new SimpleApiService();
-
+// Експортуємо єдиний екземпляр
+const apiService = new ApiService();
 export default apiService;

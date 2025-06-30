@@ -1,4 +1,4 @@
-# backend/apps/api/translations_views.py - РЕФАКТОРИНГ
+# backend/apps/api/translations_views.py - ВИПРАВЛЕНИЙ
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,10 +6,10 @@ from rest_framework.throttling import AnonRateThrottle
 from django.core.cache import cache
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
-from django.http import JsonResponse
 import json
 import os
 import logging
+import polib
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +22,7 @@ class TranslationsRateThrottle(AnonRateThrottle):
 
 class UnifiedTranslationsAPIView(APIView):
     """
-    Універсальний API для всіх типів перекладів
-    Об'єднує функціональність StaticTranslationsAPIView, 
-    DynamicTranslationsAPIView та TranslationsAPIView
+    Об'єднаний API для всіх типів перекладів
     """
     
     throttle_classes = [TranslationsRateThrottle]
@@ -52,202 +50,193 @@ class UnifiedTranslationsAPIView(APIView):
                 'supported_sources': self.SUPPORTED_SOURCES
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        cache_key = self._get_cache_key(locale, source, namespace)
+        # Генеруємо ключ кешу
+        cache_key = f"unified_translations_{locale}_{source}_{namespace or 'all'}"
         
-        # Перевіряємо кеш (якщо не примусове оновлення)
+        # Перевіряємо кеш
         if not force_refresh:
-            translations = cache.get(cache_key)
-            if translations is not None:
-                logger.info(f"Повернуто з кешу: {cache_key}")
-                return Response({
-                    'translations': translations,
-                    'locale': locale,
-                    'source': 'cache',
-                    'namespace': namespace,
-                    'count': len(translations),
-                    'cache_key': cache_key
-                })
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                logger.info(f"Використання кешованих перекладів: {cache_key}")
+                return Response(cached_data)
         
-        # Завантажуємо переклади
         try:
-            translations = self._load_translations(locale, source, namespace)
+            # Збираємо переклади з різних джерел
+            translations = {}
+            sources_used = []
             
-            # Зберігаємо в кеш на 15 хвилин
-            cache.set(cache_key, translations, 60 * 15)
+            if source in ['all', 'static']:
+                static_translations = self.get_static_translations(locale, namespace)
+                translations.update(static_translations)
+                sources_used.append('static')
+                logger.info(f"Завантажено {len(static_translations)} статичних перекладів")
             
-            logger.info(f"Завантажено {len(translations)} перекладів для {locale} з {source}")
+            if source in ['all', 'po']:
+                po_translations = self.get_po_translations(locale)
+                translations.update(po_translations)
+                sources_used.append('po')
+                logger.info(f"Завантажено {len(po_translations)} po перекладів")
             
-            return Response({
-                'translations': translations,
+            if source in ['all', 'dynamic']:
+                dynamic_translations = self.get_dynamic_translations(locale, namespace)
+                translations.update(dynamic_translations)
+                sources_used.append('dynamic')
+                logger.info(f"Завантажено {len(dynamic_translations)} динамічних перекладів")
+            
+            # Формуємо відповідь
+            response_data = {
                 'locale': locale,
-                'source': source,
-                'namespace': namespace,
+                'translations': translations,
                 'count': len(translations),
-                'cached': True
-            })
+                'sources': sources_used,
+                'namespace': namespace,
+                'cached': False,
+                'timestamp': str(timezone.now()) if hasattr(timezone, 'now') else 'unknown'
+            }
+            
+            # Кешуємо результат
+            cache_timeout = 3600 if source != 'dynamic' else 1800  # 1 год для статичних, 30 хв для динамічних
+            cache.set(cache_key, response_data, cache_timeout)
+            
+            logger.info(f"Успішно повернуто {len(translations)} перекладів для {locale}")
+            return Response(response_data)
             
         except Exception as e:
-            logger.error(f"Помилка завантаження перекладів: {str(e)}")
+            logger.error(f"Помилка при отриманні перекладів: {str(e)}")
             return Response({
-                'error': 'Помилка завантаження перекладів',
-                'details': str(e) if settings.DEBUG else None
+                'error': 'Помилка сервера при завантаженні перекладів',
+                'detail': str(e) if settings.DEBUG else 'Внутрішня помилка'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    def _get_cache_key(self, locale, source, namespace):
-        """Генерує ключ для кешування"""
-        namespace_part = f"_{namespace}" if namespace else ""
-        return f"translations_{locale}_{source}{namespace_part}"
-    
-    def _load_translations(self, locale, source, namespace):
-        """Завантажує переклади залежно від джерела"""
-        translations = {}
-        
-        if source in ['all', 'static']:
-            static_translations = self._load_static_translations(locale, namespace)
-            translations.update(static_translations)
-            
-        if source in ['all', 'po']:
-            po_translations = self._load_po_translations(locale, namespace)
-            translations.update(po_translations)
-            
-        if source in ['all', 'dynamic']:
-            dynamic_translations = self._load_dynamic_translations(locale, namespace)
-            translations.update(dynamic_translations)
-        
-        return translations
-    
-    def _load_static_translations(self, locale, namespace):
-        """Завантаження статичних JSON файлів"""
+    def get_static_translations(self, locale, namespace=None):
+        """Статичні переклади з JSON файлів"""
         try:
-            # Визначаємо шлях до файлу
-            frontend_path = getattr(settings, 'FRONTEND_DIR', 
-                                  os.path.join(settings.BASE_DIR, '..', 'frontend'))
+            static_file_path = os.path.join(
+                settings.BASE_DIR, 'static_translations', f'{locale}.json'
+            )
             
-            file_name = f'{namespace}.json' if namespace else 'common.json'
-            file_path = os.path.join(frontend_path, 'public', 'locales', locale, file_name)
-            
-            if not os.path.exists(file_path):
-                logger.warning(f"Файл не знайдено: {file_path}")
+            if os.path.exists(static_file_path):
+                with open(static_file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
                 
-                # Fallback до української якщо це не українська
-                if locale != 'uk':
-                    fallback_path = os.path.join(frontend_path, 'public', 'locales', 'uk', file_name)
-                    if os.path.exists(fallback_path):
-                        file_path = fallback_path
-                        logger.info(f"Використано fallback: {fallback_path}")
-                    else:
-                        return {}
-                else:
-                    return {}
-            
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                logger.info(f"Завантажено статичних перекладів: {len(data)} з {file_path}")
+                # Фільтруємо за namespace якщо потрібно
+                if namespace:
+                    filtered_data = {k: v for k, v in data.items() if k.startswith(f"{namespace}.")}
+                    return filtered_data
+                
                 return data
-                
-        except json.JSONDecodeError as e:
-            logger.error(f"Помилка парсингу JSON файлу {file_path}: {str(e)}")
-            return {}
+            else:
+                logger.warning(f"Файл статичних перекладів не знайдено: {static_file_path}")
+                return self.get_fallback_static_translations(locale)
+        
         except Exception as e:
             logger.error(f"Помилка завантаження статичних перекладів: {str(e)}")
-            return {}
+            return self.get_fallback_static_translations(locale)
     
-    def _load_po_translations(self, locale, namespace):
-        """Завантаження з .po файлів Django"""
+    def get_fallback_static_translations(self, locale):
+        """Fallback статичні переклади"""
+        if locale == 'en':
+            return {
+                "header.company": "Company",
+                "header.services": "Services", 
+                "header.projects": "Projects",
+                "header.about": "About",
+                "header.contact": "Contact",
+                "footer.rights": "All rights reserved",
+                "common.loading": "Loading...",
+                "common.error": "Error occurred"
+            }
+        else:  # uk
+            return {
+                "header.company": "Компанія",
+                "header.services": "Послуги",
+                "header.projects": "Проекти", 
+                "header.about": "Про нас",
+                "header.contact": "Контакти",
+                "footer.rights": "Всі права захищені",
+                "common.loading": "Завантаження...",
+                "common.error": "Сталася помилка"
+            }
+    
+    def get_po_translations(self, locale):
+        """Переклади з .po файлів Django"""
         try:
-            from django.utils.translation import get_language, activate
-            from django.utils.translation import gettext_lazy as _
+            po_file_path = os.path.join(
+                settings.BASE_DIR, 'locale', locale, 'LC_MESSAGES', 'django.po'
+            )
             
-            # Зберігаємо поточну мову
-            current_language = get_language()
+            if not os.path.exists(po_file_path):
+                logger.warning(f"PO файл не знайдено: {po_file_path}")
+                return {}
             
-            try:
-                # Активуємо потрібну мову
-                activate(locale)
-                
-                # Тут би була логіка для читання .po файлів
-                # Для прикладу повертаємо порожній словник
-                po_translations = {}
-                
-                # Якщо є конкретний namespace, фільтруємо
-                if namespace:
-                    po_translations = {
-                        k: v for k, v in po_translations.items() 
-                        if k.startswith(f"{namespace}.")
-                    }
-                
-                return po_translations
-                
-            finally:
-                # Відновлюємо попередню мову
-                activate(current_language)
-                
+            po = polib.pofile(po_file_path)
+            translations = {}
+            
+            for entry in po:
+                if entry.msgstr and not entry.obsolete:
+                    # Очищуємо ключ від спеціальних символів
+                    clean_key = entry.msgid.strip().replace('\n', ' ')
+                    translations[f"po.{clean_key}"] = entry.msgstr
+            
+            return translations
+            
         except Exception as e:
-            logger.error(f"Помилка завантаження .po перекладів: {str(e)}")
+            logger.error(f"Помилка завантаження po перекладів: {str(e)}")
             return {}
     
-    def _load_dynamic_translations(self, locale, namespace):
-        """Завантаження з моделей Django (для перекладів контенту)"""
+    def get_dynamic_translations(self, locale, namespace=None):
+        """Динамічні переклади з Django моделей"""
+        from django.utils import translation
+        
+        translation.activate(locale)
+        dynamic_translations = {}
+        
         try:
-            dynamic_translations = {}
+            if not namespace or namespace == 'services':
+                # Послуги
+                try:
+                    from apps.services.models import Service
+                    services = Service.objects.filter(is_active=True)
+                    for service in services:
+                        name_field = f'name_{locale}' if hasattr(service, f'name_{locale}') else 'name'
+                        desc_field = f'short_description_{locale}' if hasattr(service, f'short_description_{locale}') else 'short_description'
+                        
+                        dynamic_translations.update({
+                            f'services.{service.id}.name': getattr(service, name_field, service.name or ''),
+                            f'services.{service.id}.description': getattr(service, desc_field, service.short_description or ''),
+                        })
+                except Exception as e:
+                    logger.warning(f"Помилка завантаження Services: {str(e)}")
             
-            # Тут можна додати логіку для завантаження перекладів з моделей
-            # Наприклад, якщо у вас є модель Translation або подібна
+            if not namespace or namespace == 'projects':
+                # Категорії проектів
+                try:
+                    from apps.projects.models import ProjectCategory
+                    categories = ProjectCategory.objects.filter(is_active=True)
+                    for category in categories:
+                        name_field = f'name_{locale}' if hasattr(category, f'name_{locale}') else 'name'
+                        desc_field = f'description_{locale}' if hasattr(category, f'description_{locale}') else 'description'
+                        
+                        dynamic_translations.update({
+                            f'categories.{category.id}.name': getattr(category, name_field, category.name or ''),
+                            f'categories.{category.id}.description': getattr(category, desc_field, getattr(category, 'description', '') or ''),
+                        })
+                except Exception as e:
+                    logger.warning(f"Помилка завантаження ProjectCategory: {str(e)}")
             
-            # Приклад для завантаження перекладів з різних моделей
-            try:
-                from apps.content.models import HomePage, AboutPage
-                from apps.services.models import Service
-                from apps.projects.models import Project, ProjectCategory
-                
-                # Завантажуємо переклади з моделей залежно від namespace
-                if not namespace or namespace == 'content':
-                    # Головна сторінка
-                    try:
-                        homepage = HomePage.objects.filter(is_active=True).first()
-                        if homepage:
-                            dynamic_translations.update({
-                                'homepage.company_description': getattr(homepage, f'company_description_{locale}', homepage.company_description),
-                                'homepage.mission_text': getattr(homepage, f'mission_text_{locale}', homepage.mission_text),
-                                'homepage.values_text': getattr(homepage, f'values_text_{locale}', homepage.values_text),
-                            })
-                    except Exception as e:
-                        logger.warning(f"Помилка завантаження HomePage: {str(e)}")
-                
-                if not namespace or namespace == 'services':
-                    # Послуги
-                    try:
-                        services = Service.objects.filter(is_active=True)[:20]  # Обмежуємо кількість
-                        for service in services:
-                            dynamic_translations.update({
-                                f'services.{service.id}.name': getattr(service, f'name_{locale}', service.name),
-                                f'services.{service.id}.description': getattr(service, f'short_description_{locale}', service.short_description),
-                            })
-                    except Exception as e:
-                        logger.warning(f"Помилка завантаження Services: {str(e)}")
-                
-                if not namespace or namespace == 'projects':
-                    # Категорії проектів
-                    try:
-                        categories = ProjectCategory.objects.filter(is_active=True)
-                        for category in categories:
-                            dynamic_translations.update({
-                                f'categories.{category.id}.name': getattr(category, f'name_{locale}', category.name),
-                                f'categories.{category.id}.description': getattr(category, f'description_{locale}', category.description),
-                            })
-                    except Exception as e:
-                        logger.warning(f"Помилка завантаження ProjectCategory: {str(e)}")
-                
-                logger.info(f"Завантажено {len(dynamic_translations)} динамічних перекладів")
-                
-            except ImportError as e:
-                logger.warning(f"Модулі не знайдено для динамічних перекладів: {str(e)}")
-            
+            logger.info(f"Завантажено {len(dynamic_translations)} динамічних перекладів")
             return dynamic_translations
             
         except Exception as e:
             logger.error(f"Помилка завантаження динамічних перекладів: {str(e)}")
             return {}
+
+
+# Імпортуємо timezone тільки якщо потрібно
+try:
+    from django.utils import timezone
+except ImportError:
+    timezone = None
 
 
 class TranslationWebhookView(APIView):
@@ -259,24 +248,35 @@ class TranslationWebhookView(APIView):
         """Очищує кеш перекладів"""
         try:
             # Очищаємо всі кеші перекладів
-            cache_pattern = "translations_*"
+            cache_patterns = [
+                "unified_translations_*",
+                "static_translations_*", 
+                "dynamic_translations_*",
+                "po_translations_*"
+            ]
             
-            # Якщо використовується Redis
+            cleared_keys = 0
+            
+            # Для Django Redis
             try:
                 from django_redis import get_redis_connection
                 con = get_redis_connection("default")
-                keys = con.keys(cache_pattern)
-                if keys:
-                    con.delete(*keys)
-                    logger.info(f"Очищено {len(keys)} ключів кешу перекладів")
+                for pattern in cache_patterns:
+                    keys = con.keys(pattern)
+                    if keys:
+                        con.delete(*keys)
+                        cleared_keys += len(keys)
+                logger.info(f"Очищено {cleared_keys} ключів кешу перекладів через Redis")
             except ImportError:
                 # Fallback для локального кешу
                 cache.clear()
+                cleared_keys = "all"
                 logger.info("Очищено весь локальний кеш")
             
             return Response({
                 'success': True,
-                'message': 'Кеш перекладів очищено'
+                'message': 'Кеш перекладів очищено',
+                'cleared_keys': cleared_keys
             })
             
         except Exception as e:

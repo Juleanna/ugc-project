@@ -142,42 +142,8 @@ LOCALE_PATHS = [
     BASE_DIR / 'locale',  
 ]
 
-
-
-# REST Framework настройки
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
-    ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour',
-        'translations': '30/min',
-    }
-}
-
-MODELTRANSLATION_DEFAULT_LANGUAGE = 'uk'
 MODELTRANSLATION_LANGUAGES = ('uk', 'en')
-MODELTRANSLATION_FALLBACK_LANGUAGES = ('uk',)
+
 
 CKEDITOR_CONFIGS = {
     'default': {
@@ -580,26 +546,6 @@ def dashboard_callback(request, context):
     """Дополнительные данные для дашборда"""
     return context
 
-# Кеширование Redis (добавить если еще нет)
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django_redis.cache.RedisCache',
-#         'LOCATION': 'redis://127.0.0.1:6379/1',
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#         },
-#         'KEY_PREFIX': 'ugc_api',
-#        'TIMEOUT': 300,  # 5 минут по умолчанию
-#     }
-# }
-
-# Або використовуйте локальний кеш для розробки:
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'translations-cache',
-                  }
-}
 # Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -626,8 +572,7 @@ CKEDITOR_UPLOAD_SLUGIFY_FILENAME = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Для табів в адмінці
-MODELTRANSLATION_ENABLE_FALLBACKS = True
+
 MODELTRANSLATION_PREPOPULATE_LANGUAGE = 'uk'
 
 # CORS налаштування
@@ -638,8 +583,43 @@ CORS_ALLOWED_ORIGINS = [
     # "https://yourdomain.com",
 ]
 
-# Або для розробки можна дозволити всі origins (НЕ використовуйте в production!)
-# CORS_ALLOW_ALL_ORIGINS = True
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '1000/hour',
+        'translations': '100/min',  # Спеціальний ліміт для перекладів
+    },
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+        },
+        'KEY_PREFIX': 'ugc_api',
+        'TIMEOUT': 300,  # 5 хвилин за замовчуванням
+    }
+}
 
 # Дозволені методи
 CORS_ALLOW_METHODS = [
@@ -662,6 +642,8 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'x-cache',
+    'cache-control',
 ]
 
 # Дозволити credentials
@@ -669,3 +651,98 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Префлайт кеш
 CORS_PREFLIGHT_MAX_AGE = 86400
+
+# ========== ЛОГУВАННЯ ==========
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'apps.api': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Створюємо папку для логів
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
+
+# ========== НАЛАШТУВАННЯ МОДЕЛЬНОГО ПЕРЕКЛАДУ ==========
+
+# Для django-modeltranslation
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'uk'
+MODELTRANSLATION_ENABLE_FALLBACKS = True
+MODELTRANSLATION_FALLBACK_LANGUAGES = {
+    "default": ("uk",),
+    "uk": ("uk", "en"),
+}
+
+
+# ========== БЕЗПЕКА ==========
+
+# Налаштування сесій
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# CSRF
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
+# Безпекові заголовки
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_FRAME_DENY = True
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# ========== РОЗШИРЕНІ НАЛАШТУВАННЯ ДЛЯ ПЕРЕКЛАДІВ ==========
+
+# Шляхи до статичних файлів перекладів
+STATIC_TRANSLATIONS_DIR = os.path.join(BASE_DIR, 'static_translations')
+os.makedirs(STATIC_TRANSLATIONS_DIR, exist_ok=True)
+
+# Налаштування для експорту перекладів
+TRANSLATION_EXPORT_SETTINGS = {
+    'INCLUDE_DYNAMIC': True,
+    'INCLUDE_PO': True,
+    'CACHE_TIMEOUT': 1800,  # 30 хвилин
+    'BATCH_SIZE': 1000,
+    'MAX_EXPORT_SIZE': 10000,
+}

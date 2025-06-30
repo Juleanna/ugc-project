@@ -1,0 +1,31 @@
+INFO 2025-06-30 09:52:54,918 autoreload 16904 14708 Watching for file changes with StatReloader
+INFO 2025-06-30 09:53:24,679 translations_views 16904 7972 Завантажено 254 статичних перекладів
+INFO 2025-06-30 09:53:24,764 translations_views 16904 7972 Завантажено 203 po перекладів
+INFO 2025-06-30 09:53:24,873 translations_views 16904 7972 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 09:53:24,873 translations_views 16904 7972 Завантажено 0 динамічних перекладів
+INFO 2025-06-30 09:53:24,875 translations_views 16904 7972 Успішно повернуто 254 перекладів для uk
+INFO 2025-06-30 09:53:24,919 middleware 16904 7972 Cache SET для: trans_cache_979c25ecc4ad4b18f9... (timeout: 3600s)
+INFO 2025-06-30 09:53:24,963 basehttp 16904 7972 "GET /api/v1/translations/uk/ HTTP/1.1" 200 14161
+WARNING 2025-06-30 09:53:26,217 log 16904 7972 Not Found: /favicon.ico
+WARNING 2025-06-30 09:53:26,218 basehttp 16904 7972 "GET /favicon.ico HTTP/1.1" 404 3005
+INFO 2025-06-30 09:53:40,076 basehttp 16904 13844 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 11210
+WARNING 2025-06-30 09:53:41,464 log 16904 17568 Not Found: /favicon.ico
+WARNING 2025-06-30 09:53:41,464 basehttp 16904 17568 "GET /favicon.ico HTTP/1.1" 404 3005
+INFO 2025-06-30 09:53:44,122 basehttp 16904 17568 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 11210
+INFO 2025-06-30 09:53:44,290 basehttp 16904 14048 "GET /static/unfold/fonts/material-symbols/styles.css HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,291 basehttp 16904 17568 "GET /static/unfold/fonts/inter/styles.css HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,292 basehttp 16904 11892 "GET /static/unfold/css/styles.css HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,302 basehttp 16904 14048 "GET /static/unfold/js/app.js HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,306 basehttp 16904 17568 "GET /static/unfold/js/simplebar/simplebar.js HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,309 basehttp 16904 6060 "GET /static/unfold/css/simplebar/simplebar.css HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,322 basehttp 16904 11700 "GET /static/unfold/js/htmx/htmx.js HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,323 basehttp 16904 2464 "GET /static/unfold/js/chart/chart.js HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,405 basehttp 16904 11700 "GET /static/unfold/js/alpine/alpine.persist.js HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,406 basehttp 16904 2464 "GET /static/unfold/js/alpine/alpine.anchor.js HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,406 basehttp 16904 14048 "GET /static/unfold/js/alpine/alpine.js HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,406 basehttp 16904 6060 "GET /static/unfold/js/alpine/alpine.sort.js HTTP/1.1" 304 0
+INFO 2025-06-30 09:53:44,407 basehttp 16904 17568 "GET /static/unfold/js/alpine/alpine.resize.js HTTP/1.1" 304 0
+WARNING 2025-06-30 09:53:44,462 basehttp 16904 17568 "GET /static/login-bg.jpg HTTP/1.1" 404 1963
+INFO 2025-06-30 09:55:18,892 translations_views 16904 9408 Використання кешованих перекладів: unified_translations_uk_all_all
+INFO 2025-06-30 09:55:18,938 middleware 16904 9408 Cache SET для: trans_cache_e06ba5855132877087... (timeout: 3600s)
+INFO 2025-06-30 09:55:18,940 basehttp 16904 9408 "GET /api/v1/translations/ HTTP/1.1" 200 14161

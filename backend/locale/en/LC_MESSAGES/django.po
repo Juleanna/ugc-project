@@ -10,9 +10,9 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-06-11 15:12+0300\n"
 "PO-Revision-Date: 2025-06-17 14:07+0300\n"
-"Last-Translator:   <juleannadafna@gmail.com>\n"
+"Last-Translator: <juleannadafna@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -44,15 +44,15 @@ msgstr "Location"
 #: .\apps\projects\admin.py:63 .\apps\projects\admin.py:170
 #: .\apps\services\admin.py:73 .\apps\services\admin.py:169
 msgid "Налаштування"
-msgstr ""
+msgstr "Налаштування"
 
 #: .\apps\contacts\admin.py:54 .\apps\contacts\models.py:18
 msgid "Тип"
-msgstr ""
+msgstr "Тип"
 
 #: .\apps\contacts\admin.py:67
 msgid "Головний"
-msgstr ""
+msgstr "Головний"
 
 #: .\apps\contacts\admin.py:77 .\apps\contacts\admin.py:173
 #: .\apps\content\admin.py:46 .\apps\content\admin.py:83
@@ -63,53 +63,53 @@ msgstr ""
 #: .\apps\partners\admin.py:183 .\apps\projects\admin.py:69
 #: .\apps\projects\admin.py:195 .\apps\services\admin.py:98
 msgid "Статус"
-msgstr ""
+msgstr "Статус"
 
 #: .\apps\contacts\admin.py:91 .\apps\content\admin.py:304
 #: .\apps\jobs\admin.py:133 .\apps\jobs\admin.py:303
 #: .\apps\projects\admin.py:99 .\apps\services\admin.py:120
 msgid "Позначити як активні"
-msgstr ""
+msgstr "Позначити як активні"
 
 #: .\apps\contacts\admin.py:96 .\apps\content\admin.py:309
 #: .\apps\jobs\admin.py:138 .\apps\jobs\admin.py:308
 #: .\apps\projects\admin.py:104 .\apps\services\admin.py:125
 msgid "Позначити як неактивні"
-msgstr ""
+msgstr "Позначити як неактивні"
 
 #: .\apps\contacts\admin.py:101
 msgid "Позначити як головний офіс"
-msgstr ""
+msgstr "Позначити як головний офіс"
 
 #: .\apps\contacts\admin.py:140
 msgid "Інформація про відправника"
-msgstr ""
+msgstr "Інформація про відправника"
 
 #: .\apps\contacts\admin.py:144 .\apps\contacts\models.py:64
 #: .\apps\contacts\models.py:65 .\ugc_backend\settings.py:425
 msgid "Звернення"
-msgstr ""
+msgstr "Звернення"
 
 #: .\apps\contacts\admin.py:148
 msgid "Обробка"
-msgstr ""
+msgstr "Обробка"
 
 #: .\apps\contacts\admin.py:152
 msgid "Системна інформація"
-msgstr ""
+msgstr "Системна інформація"
 
 #: .\apps\contacts\admin.py:158 .\apps\contacts\models.py:53
 #: .\apps\partners\admin.py:169 .\apps\partners\models.py:50
 msgid "Тип запиту"
-msgstr ""
+msgstr "Тип запиту"
 
 #: .\apps\contacts\admin.py:187 .\apps\partners\admin.py:195
 msgid "Позначити як оброблені"
-msgstr ""
+msgstr "Позначити як оброблені"
 
 #: .\apps\contacts\admin.py:193 .\apps\partners\admin.py:200
 msgid "Позначити як необроблені"
-msgstr ""
+msgstr "Позначити як необроблені"
 
 #: .\apps\contacts\models.py:7 .\apps\content\models.py:60
 #: .\apps\content\models.py:77 .\apps\jobs\models.py:60
@@ -117,53 +117,53 @@ msgstr ""
 #: .\apps\projects\models.py:26 .\apps\services\models.py:8
 #: .\apps\services\models.py:32
 msgid "Назва"
-msgstr ""
+msgstr "Назва"
 
 #: .\apps\contacts\models.py:8
 msgid "Адреса"
-msgstr ""
+msgstr "Адреса"
 
 #: .\apps\contacts\models.py:9 .\apps\content\models.py:61
 #: .\apps\content\models.py:78 .\apps\jobs\models.py:9
 #: .\apps\jobs\models.py:61 .\apps\partners\models.py:27
 #: .\apps\projects\models.py:10 .\apps\services\models.py:33
 msgid "Опис"
-msgstr ""
+msgstr "Опис"
 
 #: .\apps\contacts\models.py:14
 msgid "Офіс"
-msgstr ""
+msgstr "Офіс"
 
 #: .\apps\contacts\models.py:15
 msgid "Фабрика"
-msgstr ""
+msgstr "Фабрика"
 
 #: .\apps\contacts\models.py:16
 msgid "Склад"
-msgstr ""
+msgstr "Склад"
 
 #: .\apps\contacts\models.py:21 .\apps\contacts\models.py:50
 #: .\apps\jobs\models.py:46 .\apps\partners\models.py:44
 msgid "Телефон"
-msgstr ""
+msgstr "Телефон"
 
 #: .\apps\contacts\models.py:22 .\apps\contacts\models.py:49
 #: .\apps\content\models.py:46 .\apps\jobs\models.py:45
 #: .\apps\partners\models.py:43
 msgid "Електронна пошта"
-msgstr ""
+msgstr "Електронна пошта"
 
 #: .\apps\contacts\models.py:23
 msgid "Години роботи"
-msgstr ""
+msgstr "Години роботи"
 
 #: .\apps\contacts\models.py:25
 msgid "Широта"
-msgstr ""
+msgstr "Широта"
 
 #: .\apps\contacts\models.py:26
 msgid "Довгота"
-msgstr ""
+msgstr "Довгота"
 
 #: .\apps\contacts\models.py:28 .\apps\content\models.py:48
 #: .\apps\content\models.py:81 .\apps\jobs\models.py:65
@@ -171,129 +171,129 @@ msgstr ""
 #: .\apps\projects\models.py:57 .\apps\services\models.py:18
 #: .\apps\services\models.py:36
 msgid "Порядок"
-msgstr ""
+msgstr "Порядок"
 
 #: .\apps\contacts\models.py:29
 msgid "Головний офіс"
-msgstr ""
+msgstr "Головний офіс"
 
 #: .\apps\contacts\models.py:30 .\apps\content\models.py:50
 #: .\apps\content\models.py:67 .\apps\content\models.py:83
 #: .\apps\jobs\models.py:66 .\apps\projects\models.py:43
 msgid "Активний"
-msgstr ""
+msgstr "Активний"
 
 #: .\apps\contacts\models.py:34
 msgid "Офіс/Фабрика"
-msgstr ""
+msgstr "Офіс/Фабрика"
 
 #: .\apps\contacts\models.py:35
 msgid "Офіси/Фабрики"
-msgstr ""
+msgstr "Офіси/Фабрики"
 
 #: .\apps\contacts\models.py:41
 msgid "Загальне запитання"
-msgstr ""
+msgstr "Загальне запитання"
 
 #: .\apps\contacts\models.py:42 .\apps\partners\models.py:46
 msgid "Співпраця"
-msgstr ""
+msgstr "Співпраця"
 
 #: .\apps\contacts\models.py:43
 msgid "Скарга"
-msgstr ""
+msgstr "Скарга"
 
 #: .\apps\contacts\models.py:44
 msgid "Пропозиція"
-msgstr ""
+msgstr "Пропозиція"
 
 #: .\apps\contacts\models.py:45
 msgid "Запит вартості"
-msgstr ""
+msgstr "Запит вартості"
 
 #: .\apps\contacts\models.py:48 .\apps\content\models.py:41
 #: .\apps\jobs\admin.py:207 .\apps\jobs\models.py:43
 msgid "Ім'я"
-msgstr ""
+msgstr "Ім'я"
 
 #: .\apps\contacts\models.py:51
 msgid "Компанія"
-msgstr ""
+msgstr "Компанія"
 
 #: .\apps\contacts\models.py:54
 msgid "Тема"
-msgstr ""
+msgstr "Тема"
 
 #: .\apps\contacts\models.py:55 .\apps\partners\models.py:51
 msgid "Повідомлення"
-msgstr ""
+msgstr "Повідомлення"
 
 #: .\apps\contacts\models.py:57
 msgid "Дата створення"
-msgstr ""
+msgstr "Дата створення"
 
 #: .\apps\contacts\models.py:58 .\apps\partners\models.py:55
 msgid "Оброблено"
-msgstr ""
+msgstr "Оброблено"
 
 #: .\apps\contacts\models.py:59
 msgid "Відповідь"
-msgstr ""
+msgstr "Відповідь"
 
 #: .\apps\contacts\models.py:60
 msgid "Дата обробки"
-msgstr ""
+msgstr "Дата обробки"
 
 #: .\apps\content\admin.py:28 .\ugc_backend\settings.py:306
 msgid "Контент"
-msgstr ""
+msgstr "Контент"
 
 #: .\apps\content\admin.py:32 .\apps\projects\admin.py:162
 #: .\apps\services\admin.py:65
 msgid "Медіа"
-msgstr ""
+msgstr "Медіа"
 
 #: .\apps\content\admin.py:36
 msgid "Статистика"
-msgstr ""
+msgstr "Статистика"
 
 #: .\apps\content\admin.py:69
 msgid "Основний контент"
-msgstr ""
+msgstr "Основний контент"
 
 #: .\apps\content\admin.py:73
 msgid "Додатковий контент"
-msgstr ""
+msgstr "Додатковий контент"
 
 #: .\apps\content\admin.py:119 .\apps\content\admin.py:133
 #: .\apps\content\admin.py:273 .\apps\content\models.py:45
 #: .\apps\jobs\admin.py:282
 msgid "Фото"
-msgstr ""
+msgstr "Фото"
 
 #: .\apps\content\admin.py:123 .\ugc_backend\settings.py:416
 msgid "Контакти"
-msgstr ""
+msgstr "Контакти"
 
 #: .\apps\content\admin.py:142 .\apps\content\models.py:49
 msgid "Керівництво"
-msgstr ""
+msgstr "Керівництво"
 
 #: .\apps\content\admin.py:164
 msgid "Позначити як активних"
-msgstr ""
+msgstr "Позначити як активних"
 
 #: .\apps\content\admin.py:169
 msgid "Позначити як неактивних"
-msgstr ""
+msgstr "Позначити як неактивних"
 
 #: .\apps\content\admin.py:174
 msgid "Позначити як керівництво"
-msgstr ""
+msgstr "Позначити як керівництво"
 
 #: .\apps\content\admin.py:204
 msgid "Деталі сертифікату"
-msgstr ""
+msgstr "Деталі сертифікату"
 
 #: .\apps\content\admin.py:208 .\apps\content\admin.py:218
 #: .\apps\content\admin.py:263 .\apps\content\models.py:63
@@ -303,594 +303,594 @@ msgstr ""
 #: .\apps\projects\models.py:14 .\apps\projects\models.py:55
 #: .\apps\services\admin.py:79
 msgid "Зображення"
-msgstr ""
+msgstr "Зображення"
 
 #: .\apps\content\admin.py:282 .\apps\content\models.py:82
 msgid "Рекомендоване"
-msgstr ""
+msgstr "Рекомендоване"
 
 #: .\apps\content\admin.py:314 .\apps\services\admin.py:130
 msgid "Позначити як рекомендовані"
-msgstr ""
+msgstr "Позначити як рекомендовані"
 
 #: .\apps\content\models.py:7
 msgid "Короткий опис компанії"
-msgstr ""
+msgstr "Короткий опис компанії"
 
 #: .\apps\content\models.py:8 .\apps\content\models.py:27
 msgid "Місія"
-msgstr ""
+msgstr "Місія"
 
 #: .\apps\content\models.py:9 .\apps\content\models.py:28
 msgid "Цінності"
-msgstr ""
+msgstr "Цінності"
 
 #: .\apps\content\models.py:13
 msgid "Років досвіду"
-msgstr ""
+msgstr "Років досвіду"
 
 #: .\apps\content\models.py:14
 msgid "Кількість співробітників"
-msgstr ""
+msgstr "Кількість співробітників"
 
 #: .\apps\content\models.py:15
 msgid "Виконано проєктів"
-msgstr ""
+msgstr "Виконано проєктів"
 
 #: .\apps\content\models.py:16 .\apps\content\models.py:31
 #: .\apps\jobs\models.py:29 .\apps\partners\models.py:15
 #: .\apps\projects\models.py:16 .\apps\services\models.py:20
 msgid "Активна"
-msgstr ""
+msgstr "Активна"
 
 #: .\apps\content\models.py:17 .\apps\content\models.py:32
 #: .\apps\partners\models.py:16
 msgid "Оновлено"
-msgstr ""
+msgstr "Оновлено"
 
 #: .\apps\content\models.py:20 .\apps\content\models.py:21
 #: .\ugc_backend\settings.py:310
 msgid "Головна сторінка"
-msgstr ""
+msgstr "Головна сторінка"
 
 #: .\apps\content\models.py:26
 msgid "Історія компанії"
-msgstr ""
+msgstr "Історія компанії"
 
 #: .\apps\content\models.py:29
 msgid "Соціальна відповідальність"
-msgstr ""
+msgstr "Соціальна відповідальність"
 
 #: .\apps\content\models.py:35 .\apps\content\models.py:36
 msgid "Сторінка 'Про нас'"
-msgstr ""
+msgstr "Сторінка 'Про нас'"
 
 #: .\apps\content\models.py:42
 msgid "Посада"
-msgstr ""
+msgstr "Посада"
 
 #: .\apps\content\models.py:43
 msgid "Біографія"
-msgstr ""
+msgstr "Біографія"
 
 #: .\apps\content\models.py:47
 msgid "LinkedIn"
-msgstr ""
+msgstr "LinkedIn"
 
 #: .\apps\content\models.py:54
 msgid "Член команди"
-msgstr ""
+msgstr "Член команди"
 
 #: .\apps\content\models.py:55 .\ugc_backend\settings.py:320
 msgid "Команда"
-msgstr ""
+msgstr "Команда"
 
 #: .\apps\content\models.py:64
 msgid "Дата видачі"
-msgstr ""
+msgstr "Дата видачі"
 
 #: .\apps\content\models.py:65
 msgid "Організація"
-msgstr ""
+msgstr "Організація"
 
 #: .\apps\content\models.py:66
 msgid "Посилання"
-msgstr ""
+msgstr "Посилання"
 
 #: .\apps\content\models.py:71
 msgid "Сертифікат"
-msgstr ""
+msgstr "Сертифікат"
 
 #: .\apps\content\models.py:72 .\ugc_backend\settings.py:325
 msgid "Сертифікати"
-msgstr ""
+msgstr "Сертифікати"
 
 #: .\apps\content\models.py:87 .\apps\content\models.py:88
 #: .\ugc_backend\settings.py:330
 msgid "Фото виробництва"
-msgstr ""
+msgstr "Фото виробництва"
 
 #: .\apps\jobs\admin.py:61
 msgid "Вимоги та обов'язки"
-msgstr ""
+msgstr "Вимоги та обов'язки"
 
 #: .\apps\jobs\admin.py:65
 msgid "Умови роботи"
-msgstr ""
+msgstr "Умови роботи"
 
 #: .\apps\jobs\admin.py:69 .\apps\jobs\admin.py:92
 msgid "Зарплата"
-msgstr ""
+msgstr "Зарплата"
 
 #: .\apps\jobs\admin.py:79 .\apps\jobs\models.py:21
 msgid "Тип зайнятості"
-msgstr ""
+msgstr "Тип зайнятості"
 
 #: .\apps\jobs\admin.py:112 .\apps\jobs\models.py:30
 msgid "Терміново"
-msgstr ""
+msgstr "Терміново"
 
 #: .\apps\jobs\admin.py:122 .\ugc_backend\settings.py:383
 msgid "Заявки"
-msgstr ""
+msgstr "Заявки"
 
 #: .\apps\jobs\admin.py:143
 msgid "Позначити як термінові"
-msgstr ""
+msgstr "Позначити як термінові"
 
 #: .\apps\jobs\admin.py:148
 msgid "Зняти позначку 'Терміново'"
-msgstr ""
+msgstr "Зняти позначку 'Терміново'"
 
 #: .\apps\jobs\admin.py:189
 msgid "Персональна інформація"
-msgstr ""
+msgstr "Персональна інформація"
 
 #: .\apps\jobs\admin.py:193 .\apps\jobs\models.py:36 .\apps\jobs\models.py:42
 msgid "Вакансія"
-msgstr ""
+msgstr "Вакансія"
 
 #: .\apps\jobs\admin.py:197 .\apps\services\admin.py:69
 msgid "Додаткова інформація"
-msgstr ""
+msgstr "Додаткова інформація"
 
 #: .\apps\jobs\admin.py:211 .\apps\jobs\models.py:48
 msgid "Резюме"
-msgstr ""
+msgstr "Резюме"
 
 #: .\apps\jobs\admin.py:236
 msgid "Позначити як переглянуті"
-msgstr ""
+msgstr "Позначити як переглянуті"
 
 #: .\apps\jobs\admin.py:241
 msgid "Позначити як непереглянуті"
-msgstr ""
+msgstr "Позначити як непереглянуті"
 
 #: .\apps\jobs\models.py:8
 msgid "Назва вакансії"
-msgstr ""
+msgstr "Назва вакансії"
 
 #: .\apps\jobs\models.py:10
 msgid "Вимоги"
-msgstr ""
+msgstr "Вимоги"
 
 #: .\apps\jobs\models.py:11
 msgid "Обов'язки"
-msgstr ""
+msgstr "Обов'язки"
 
 #: .\apps\jobs\models.py:12 .\apps\services\models.py:11
 msgid "Переваги"
-msgstr ""
+msgstr "Переваги"
 
 #: .\apps\jobs\models.py:15
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #: .\apps\jobs\models.py:18
 msgid "Повна зайнятість"
-msgstr ""
+msgstr "Повна зайнятість"
 
 #: .\apps\jobs\models.py:19
 msgid "Часткова зайнятість"
-msgstr ""
+msgstr "Часткова зайнятість"
 
 #: .\apps\jobs\models.py:20
 msgid "Контракт"
-msgstr ""
+msgstr "Контракт"
 
 #: .\apps\jobs\models.py:23
 msgid "Досвід роботи"
-msgstr ""
+msgstr "Досвід роботи"
 
 #: .\apps\jobs\models.py:24
 msgid "Зарплата від"
-msgstr ""
+msgstr "Зарплата від"
 
 #: .\apps\jobs\models.py:25
 msgid "Зарплата до"
-msgstr ""
+msgstr "Зарплата до"
 
 #: .\apps\jobs\models.py:26
 msgid "Валюта"
-msgstr ""
+msgstr "Валюта"
 
 #: .\apps\jobs\models.py:27
 msgid "Місце роботи"
-msgstr ""
+msgstr "Місце роботи"
 
 #: .\apps\jobs\models.py:31 .\apps\jobs\models.py:49
 #: .\apps\partners\models.py:54 .\apps\projects\models.py:44
 #: .\apps\services\models.py:21
 msgid "Створено"
-msgstr ""
+msgstr "Створено"
 
 #: .\apps\jobs\models.py:32
 msgid "Термін дії"
-msgstr ""
+msgstr "Термін дії"
 
 #: .\apps\jobs\models.py:37 .\ugc_backend\settings.py:374
 msgid "Вакансії"
-msgstr ""
+msgstr "Вакансії"
 
 #: .\apps\jobs\models.py:44
 msgid "Прізвище"
-msgstr ""
+msgstr "Прізвище"
 
 #: .\apps\jobs\models.py:47
 msgid "Супровідний лист"
-msgstr ""
+msgstr "Супровідний лист"
 
 #: .\apps\jobs\models.py:50
 msgid "Переглянуто"
-msgstr ""
+msgstr "Переглянуто"
 
 #: .\apps\jobs\models.py:54
 msgid "Заявка на вакансію"
-msgstr ""
+msgstr "Заявка на вакансію"
 
 #: .\apps\jobs\models.py:55
 msgid "Заявки на вакансії"
-msgstr ""
+msgstr "Заявки на вакансії"
 
 #: .\apps\jobs\models.py:70
 msgid "Фото робочого місця"
-msgstr ""
+msgstr "Фото робочого місця"
 
 #: .\apps\jobs\models.py:71 .\ugc_backend\settings.py:388
 msgid "Фото робочих місць"
-msgstr ""
+msgstr "Фото робочих місць"
 
 #: .\apps\partners\admin.py:46
 msgid "FAQ"
-msgstr ""
+msgstr "FAQ"
 
 #: .\apps\partners\admin.py:50
 msgid "Виробничі характеристики"
-msgstr ""
+msgstr "Виробничі характеристики"
 
 #: .\apps\partners\admin.py:60
 msgid "Мін. замовлення"
-msgstr ""
+msgstr "Мін. замовлення"
 
 #: .\apps\partners\admin.py:102
 msgid "Візуальне оформлення"
-msgstr ""
+msgstr "Візуальне оформлення"
 
 #: .\apps\partners\admin.py:112 .\apps\partners\models.py:29
 #: .\apps\services\admin.py:175 .\apps\services\models.py:14
 #: .\apps\services\models.py:35
 msgid "Іконка"
-msgstr ""
+msgstr "Іконка"
 
 #: .\apps\partners\admin.py:155
 msgid "Інформація про компанію"
-msgstr ""
+msgstr "Інформація про компанію"
 
 #: .\apps\partners\admin.py:159
 msgid "Запит"
-msgstr ""
+msgstr "Запит"
 
 #: .\apps\partners\models.py:8
 msgid "Умови співпраці"
-msgstr ""
+msgstr "Умови співпраці"
 
 #: .\apps\partners\models.py:9 .\apps\partners\models.py:36
 #: .\ugc_backend\settings.py:404
 msgid "Етапи роботи"
-msgstr ""
+msgstr "Етапи роботи"
 
 #: .\apps\partners\models.py:10
 msgid "FAQ для замовників"
-msgstr ""
+msgstr "FAQ для замовників"
 
 #: .\apps\partners\models.py:11
 msgid "Переваги співпраці"
-msgstr ""
+msgstr "Переваги співпраці"
 
 #: .\apps\partners\models.py:13
 msgid "Мін. сума замовлення"
-msgstr ""
+msgstr "Мін. сума замовлення"
 
 #: .\apps\partners\models.py:14
 msgid "Виробнича потужність"
-msgstr ""
+msgstr "Виробнича потужність"
 
 #: .\apps\partners\models.py:20 .\apps\partners\models.py:21
 #: .\ugc_backend\settings.py:399
 msgid "Інформація для партнерів"
-msgstr ""
+msgstr "Інформація для партнерів"
 
 #: .\apps\partners\models.py:31
 msgid "Тривалість"
-msgstr ""
+msgstr "Тривалість"
 
 #: .\apps\partners\models.py:35
 msgid "Етап роботи"
-msgstr ""
+msgstr "Етап роботи"
 
 #: .\apps\partners\models.py:41
 msgid "Назва компанії"
-msgstr ""
+msgstr "Назва компанії"
 
 #: .\apps\partners\models.py:42
 msgid "Контактна особа"
-msgstr ""
+msgstr "Контактна особа"
 
 #: .\apps\partners\models.py:47
 msgid "Запит на розрахунок"
-msgstr ""
+msgstr "Запит на розрахунок"
 
 #: .\apps\partners\models.py:48
 msgid "Зразки продукції"
-msgstr ""
+msgstr "Зразки продукції"
 
 #: .\apps\partners\models.py:49
 msgid "Інше"
-msgstr ""
+msgstr "Інше"
 
 #: .\apps\partners\models.py:52
 msgid "Опис проєкту"
-msgstr ""
+msgstr "Опис проєкту"
 
 #: .\apps\partners\models.py:53
 msgid "Орієнтовна кількість"
-msgstr ""
+msgstr "Орієнтовна кількість"
 
 #: .\apps\partners\models.py:59
 msgid "Запит партнера"
-msgstr ""
+msgstr "Запит партнера"
 
 #: .\apps\partners\models.py:60 .\ugc_backend\settings.py:409
 msgid "Запити партнерів"
-msgstr ""
+msgstr "Запити партнерів"
 
 #: .\apps\projects\admin.py:88 .\apps\projects\models.py:49
 #: .\ugc_backend\settings.py:353
 msgid "Проєкти"
-msgstr ""
+msgstr "Проєкти"
 
 #: .\apps\projects\admin.py:154
 msgid "Додаткові деталі"
-msgstr ""
+msgstr "Додаткові деталі"
 
 #: .\apps\projects\admin.py:158
 msgid "Клієнт та проєкт"
-msgstr ""
+msgstr "Клієнт та проєкт"
 
 #: .\apps\projects\admin.py:166
 msgid "SEO"
-msgstr ""
+msgstr "SEO"
 
 #: .\apps\projects\admin.py:185 .\apps\projects\models.py:42
 msgid "Рекомендований"
-msgstr ""
+msgstr "Рекомендований"
 
 #: .\apps\projects\admin.py:205
 msgid "Количество изображений"
-msgstr ""
+msgstr "Количество изображений"
 
 #: .\apps\projects\models.py:13 .\apps\projects\models.py:34
 #: .\apps\services\models.py:13
 msgid "Слаг"
-msgstr ""
+msgstr "Слаг"
 
 #: .\apps\projects\models.py:20
 msgid "Категорія проєктів"
-msgstr ""
+msgstr "Категорія проєктів"
 
 #: .\apps\projects\models.py:21 .\ugc_backend\settings.py:357
 msgid "Категорії проєктів"
-msgstr ""
+msgstr "Категорії проєктів"
 
 #: .\apps\projects\models.py:27 .\apps\services\models.py:9
 msgid "Короткий опис"
-msgstr ""
+msgstr "Короткий опис"
 
 #: .\apps\projects\models.py:28 .\apps\services\models.py:10
 msgid "Детальний опис"
-msgstr ""
+msgstr "Детальний опис"
 
 #: .\apps\projects\models.py:29
 msgid "Завдання"
-msgstr ""
+msgstr "Завдання"
 
 #: .\apps\projects\models.py:30
 msgid "Рішення"
-msgstr ""
+msgstr "Рішення"
 
 #: .\apps\projects\models.py:31
 msgid "Результат"
-msgstr ""
+msgstr "Результат"
 
 #: .\apps\projects\models.py:33
 msgid "Категорія"
-msgstr ""
+msgstr "Категорія"
 
 #: .\apps\projects\models.py:35
 msgid "Клієнт"
-msgstr ""
+msgstr "Клієнт"
 
 #: .\apps\projects\models.py:36
 msgid "Дата проєкту"
-msgstr ""
+msgstr "Дата проєкту"
 
 #: .\apps\projects\models.py:37
 msgid "Кількість виробів"
-msgstr ""
+msgstr "Кількість виробів"
 
 #: .\apps\projects\models.py:38
 msgid "Використані матеріали"
-msgstr ""
+msgstr "Використані матеріали"
 
 #: .\apps\projects\models.py:39 .\apps\services\models.py:15
 msgid "Головне зображення"
-msgstr ""
+msgstr "Головне зображення"
 
 #: .\apps\projects\models.py:40
 msgid "Мета-заголовок"
-msgstr ""
+msgstr "Мета-заголовок"
 
 #: .\apps\projects\models.py:41
 msgid "Мета-опис"
-msgstr ""
+msgstr "Мета-опис"
 
 #: .\apps\projects\models.py:48 .\apps\projects\models.py:54
 msgid "Проєкт"
-msgstr ""
+msgstr "Проєкт"
 
 #: .\apps\projects\models.py:56
 msgid "Підпис"
-msgstr ""
+msgstr "Підпис"
 
 #: .\apps\projects\models.py:61
 msgid "Зображення проєкту"
-msgstr ""
+msgstr "Зображення проєкту"
 
 #: .\apps\projects\models.py:62 .\ugc_backend\settings.py:367
 msgid "Зображення проєктів"
-msgstr ""
+msgstr "Зображення проєктів"
 
 #: .\apps\services\admin.py:88 .\apps\services\models.py:19
 msgid "Рекомендована"
-msgstr ""
+msgstr "Рекомендована"
 
 #: .\apps\services\admin.py:108
 msgid "Особливості"
-msgstr ""
+msgstr "Особливості"
 
 #: .\apps\services\admin.py:135
 msgid "Зняти рекомендацію"
-msgstr ""
+msgstr "Зняти рекомендацію"
 
 #: .\apps\services\models.py:16
 msgid "Мін. партія"
-msgstr ""
+msgstr "Мін. партія"
 
 #: .\apps\services\models.py:17
 msgid "Термін виробництва"
-msgstr ""
+msgstr "Термін виробництва"
 
 #: .\apps\services\models.py:25 .\apps\services\models.py:31
 msgid "Послуга"
-msgstr ""
+msgstr "Послуга"
 
 #: .\apps\services\models.py:26 .\ugc_backend\settings.py:337
 msgid "Послуги"
-msgstr ""
+msgstr "Послуги"
 
 #: .\apps\services\models.py:35
 msgid "CSS клас для іконки"
-msgstr ""
+msgstr "CSS клас для іконки"
 
 #: .\apps\services\models.py:40
 msgid "Особливість послуги"
-msgstr ""
+msgstr "Особливість послуги"
 
 #: .\apps\services\models.py:41 .\ugc_backend\settings.py:346
 msgid "Особливості послуг"
-msgstr ""
+msgstr "Особливості послуг"
 
 #: .\ugc_backend\settings.py:295
 msgid "Навігація"
-msgstr ""
+msgstr "Навігація"
 
 #: .\ugc_backend\settings.py:299
 msgid "Головна"
-msgstr ""
+msgstr "Головна"
 
 #: .\ugc_backend\settings.py:315
 msgid "Про нас"
-msgstr ""
+msgstr "Про нас"
 
 #: .\ugc_backend\settings.py:341 .\ugc_backend\settings.py:478
 msgid "Всі послуги"
-msgstr ""
+msgstr "Всі послуги"
 
 #: .\ugc_backend\settings.py:362 .\ugc_backend\settings.py:497
 msgid "Всі проєкти"
-msgstr ""
+msgstr "Всі проєкти"
 
 #: .\ugc_backend\settings.py:378
 msgid "Позиції"
-msgstr ""
+msgstr "Позиції"
 
 #: .\ugc_backend\settings.py:395
 msgid "Партнери"
-msgstr ""
+msgstr "Партнери"
 
 #: .\ugc_backend\settings.py:420
 msgid "Офіси та фабрики"
-msgstr ""
+msgstr "Офіси та фабрики"
 
 #: .\ugc_backend\settings.py:440
 msgid "Всі офіси"
-msgstr ""
+msgstr "Всі офіси"
 
 #: .\ugc_backend\settings.py:444 .\ugc_backend\settings.py:482
 #: .\ugc_backend\settings.py:501 .\ugc_backend\settings.py:520
 msgid "Активні"
-msgstr ""
+msgstr "Активні"
 
 #: .\ugc_backend\settings.py:448
 msgid "Головні офіси"
-msgstr ""
+msgstr "Головні офіси"
 
 #: .\ugc_backend\settings.py:459
 msgid "Всі звернення"
-msgstr ""
+msgstr "Всі звернення"
 
 #: .\ugc_backend\settings.py:463
 msgid "Необроблені"
-msgstr ""
+msgstr "Необроблені"
 
 #: .\ugc_backend\settings.py:467 .\ugc_backend\settings.py:562
 msgid "Оброблені"
-msgstr ""
+msgstr "Оброблені"
 
 #: .\ugc_backend\settings.py:486 .\ugc_backend\settings.py:505
 msgid "Рекомендовані"
-msgstr ""
+msgstr "Рекомендовані"
 
 #: .\ugc_backend\settings.py:516
 msgid "Всі вакансії"
-msgstr ""
+msgstr "Всі вакансії"
 
 #: .\ugc_backend\settings.py:524
 msgid "Термінові"
-msgstr ""
+msgstr "Термінові"
 
 #: .\ugc_backend\settings.py:535
 msgid "Всі заявки"
-msgstr ""
+msgstr "Всі заявки"
 
 #: .\ugc_backend\settings.py:539 .\ugc_backend\settings.py:558
 msgid "Нові"
-msgstr ""
+msgstr "Нові"
 
 #: .\ugc_backend\settings.py:543
 msgid "Переглянуті"
-msgstr ""
+msgstr "Переглянуті"
 
 #: .\ugc_backend\settings.py:554
 msgid "Всі запити"
-msgstr ""
+msgstr "Всі запити"

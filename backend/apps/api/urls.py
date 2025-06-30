@@ -1,11 +1,10 @@
-# backend/apps/api/urls.py - РЕФАКТОРИНГ БЕЗ ДУБЛЮВАНЬ
+# backend/apps/api/urls.py - ВИПРАВЛЕНИЙ БЕЗ КОНФЛІКТІВ
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from apps.api.webhooks import TranslationWebhookView
 from . import views
 
-# ============================= НОВИЙ IMPORTS =============================
-# Тепер імпортуємо тільки один view для перекладів
+# ============================= ІМПОРТ ТІЛЬКИ НОВИХ VIEW =============================
 from .translations_views import UnifiedTranslationsAPIView
 
 # ============================= РОУТЕР =============================
@@ -43,32 +42,10 @@ urlpatterns = [
     path('', include(router.urls)),
     
     # =============== ЄДИНИЙ ЕНДПОІНТ ДЛЯ ВСІХ ПЕРЕКЛАДІВ ===============
-    # Замінює всі попередні ендпоінти:
-    # - translations/ (StaticTranslationsAPIView) 
-    # - po-translations/ (TranslationsAPIView)
-    # - dynamic-translations/ (DynamicTranslationsAPIView)
-    
-    path('translations/', UnifiedTranslationsAPIView.as_view(), name='translations'),
+    # Основний ендпоінт для перекладів
+    path('translations/', UnifiedTranslationsAPIView.as_view(), name='translations-default'),
     path('translations/<str:locale>/', UnifiedTranslationsAPIView.as_view(), name='translations-locale'),
     
     # =============== WEBHOOKS ===============
     path('webhooks/translations/', TranslationWebhookView.as_view(), name='translation-webhook'),
 ]
-
-# ============================= ДОДАТКОВІ МАРШРУТИ (ОПЦІОНАЛЬНО) =============================
-
-# Якщо потрібно, можна додати маршрути для специфічних випадків:
-# 
-# urlpatterns += [
-#     # Маршрут тільки для статичних перекладів
-#     path('translations/static/<str:locale>/', 
-#          UnifiedTranslationsAPIView.as_view(), 
-#          {'source': 'static'}, 
-#          name='translations-static'),
-#     
-#     # Маршрут тільки для динамічних перекладів
-#     path('translations/dynamic/<str:locale>/', 
-#          UnifiedTranslationsAPIView.as_view(), 
-#          {'source': 'dynamic'}, 
-#          name='translations-dynamic'),
-# ]
